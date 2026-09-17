@@ -1,3 +1,6 @@
-streamlit
-pandas
-snowflake-connector-python
+streamlit>=1.35.0
+pandas>=2.0.0
+langchain>=0.2.0
+langchain-community>=0.2.0
+langchain-openai>=0.1.0
+faiss-cpu>=1.8.0
