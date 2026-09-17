@@ -7,9 +7,10 @@ import os
 try:
     from langchain_google_genai import GoogleGenerativeAIEmbeddings
     import faiss
+    import plotly.express as px
 except ImportError:
     with st.spinner("🔧 Synchronizing production environment layers..."):
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "langchain-google-genai>=1.0.0", "faiss-cpu>=1.8.0"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "langchain-google-genai>=1.0.0", "faiss-cpu>=1.8.0", "plotly>=5.20.0"])
     st.rerun()
 
 st.set_page_config(page_title="Risk & Fraud Copilot", page_icon="🛡️", layout="wide")
@@ -47,7 +48,6 @@ try:
     engine = init_engine()
 except Exception as e:
     st.error(f"❌ Initialization Error: {e}")
-    st.info("Please verify your API key is correct and valid inside Google AI Studio.")
     st.stop()
 
 # ─── 🎛️ CONTROL PANEL & PIPELINE ───
@@ -78,6 +78,23 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
         
         st.markdown("### Active Anomalous System Payload")
         st.dataframe(signals, use_container_width=True)
+        
+        # ─── 📈 PLOTLY VISUALIZATION LAYER ───
+        import pandas as pd
+        df_signals = pd.DataFrame(signals)
+        
+        fig = px.bar(
+            df_signals, 
+            x="TRANSACTION_ID", 
+            y="AMOUNT", 
+            color="RISK_SCORE",
+            hover_data=["CUSTOMER_NAME", "COUNTRY_CODE", "KYC_STATUS"],
+            labels={"TRANSACTION_ID": "Transaction ID", "AMOUNT": "Amount (INR)", "RISK_SCORE": "Risk Score Level"},
+            title="Anomalous Transaction Exposure & Associated Risk Index",
+            color_continuous_scale="Reds"
+        )
+        fig.update_layout(template="plotly_dark", title_x=0.0)
+        st.plotly_chart(fig, use_container_width=True)
         
         # Step 2: Evidence Gathering
         st.header("🔎 Step 2: Evidence Gathering (Vector Store / RAG)")
