@@ -26,7 +26,6 @@ user_key = st.sidebar.text_input(
 )
 
 if user_key:
-    # Force reset the cache if the key changes to prevent stale data
     if st.session_state.get("active_key") != user_key:
         st.session_state["active_key"] = user_key
         st.cache_resource.clear()
@@ -48,7 +47,7 @@ try:
     engine = init_engine()
 except Exception as e:
     st.error(f"❌ Initialization Error: {e}")
-    st.info("If you still see a 404 error, click 'Manage app' and run a clean Reboot to wipe the old state cache.")
+    st.info("Please verify your API key is correct and valid inside Google AI Studio.")
     st.stop()
 
 # ─── 🎛️ CONTROL PANEL & PIPELINE ───
