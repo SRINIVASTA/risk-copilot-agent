@@ -1,0 +1,4 @@
+REGULATORY COMPLIANCE MANUAL - SECTION 4: ANTI-MONEY LAUNDERING (AML)
+[RULE-AML-01] High-Value Offshore Transfers: Any single outward remittance exceeding INR 5,000,000 to high-risk tax jurisdictions (including Cyprus [CY], Cayman Islands [KY], or Switzerland [CH]) must be flagged for review.
+[RULE-KYC-02] Account Governance: Corporate accounts operating with a 'PENDING' KYC status are restricted from executing cross-border wire transfers exceeding INR 1,000,000. Any such action constitutes an immediate compliance breach.
+[RULE-REP-03] Report Generation: Upon cross-referencing high-risk transactions with non-compliant account attributes, the compliance system must auto-generate a Suspicious Transaction Report (STR) highlighting the specific rule violated and the exact financial metrics.
