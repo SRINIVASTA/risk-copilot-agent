@@ -89,8 +89,19 @@ if user_query:
                 """
                 
                 if not df_signals.empty:
-                    #  Pass 'conn' directly to bypass the No Default Session error
-                    report_output = Complete("snowflake-arctic", prompt, session=conn)
+                    # 💡 FIX: Use standard SQL to call Cortex instead of the Snowpark dependent library
+                    cortex_sql = "SELECT CORTEX.COMPLETE('snowflake-arctic', %s)"
+                    
+                    if hasattr(conn, "sql"):  # Native Snowsight Environment
+                        report_df = conn.sql(cortex_sql, params=[prompt]).to_pandas()
+                        report_output = report_df.iloc[0, 0]
+                    else:  # Standard Local Python Terminal Environment
+                        cursor = conn.cursor()
+                        cursor.execute(cortex_sql, (prompt,))
+                        report_output = cursor.fetchone()[0]
+                        cursor.close()
+                    
+                    # Display the report output on the screen
                     st.markdown(report_output)
                     st.download_button("📥 Export Report as TXT", data=report_output, file_name="STR_Audit_Report.txt")
                 else:
