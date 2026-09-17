@@ -1,7 +1,7 @@
 import streamlit as tf
 import pandas as pd
-# import snowflake.permissions as permissions
-from snowflake.cortex import Complete
+import snowflake.permissions as permissions
+# from snowflake.cortex import Complete
 import os
 
 # 1. Page Configuration & Visual Anchors
