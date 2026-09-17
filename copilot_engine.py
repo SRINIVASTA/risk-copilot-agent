@@ -1,22 +1,23 @@
 import pandas as pd
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
-from langchain_google_genai import GoogleGenAIEmbeddings, ChatGoogleGenerativeAI
+from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGenerativeAI
 
 class FraudCopilotEngine:
     def __init__(self):
-        # 1. Load your separate text/csv data components from GitHub directories
+        # 1. Load your separate text/csv data components from your /data/ folder
         self.tx_df = pd.read_csv("data/transaction_ledger.csv")
         self.acc_df = pd.read_csv("data/account_master.csv")
         
-        # 2. Extract unstructured policies
+        # 2. Extract unstructured policies from your /policies/ folder
         with open("policies/rbi_aml_directions.txt", "r") as f:
             policy_content = f.read()
         
         chunks = [chunk.strip() for chunk in policy_content.split("\n\n") if chunk.strip()]
         
-        # 3. Model Engine Init (picks up GOOGLE_API_KEY dynamically from environment)
-        self.embeddings = GoogleGenAIEmbeddings(model="models/text-embedding-004")
+        # 3. Model Engine Init (Picks up GOOGLE_API_KEY dynamically from app environment)
+        # Using GoogleGenerativeAIEmbeddings to resolve the import failure
+        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
         self.vector_db = FAISS.from_texts(chunks, self.embeddings)
         self.llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0)
 
