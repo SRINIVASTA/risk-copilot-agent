@@ -7,19 +7,24 @@ st.set_page_config(page_title="Risk & AML Copilot", layout="wide")
 st.title("🏦 Risk, Fraud & Regulatory Intelligence Copilot")
 st.caption("Snowflake CoCo CLI Hackathon — GCC Edition 2026")
 
-# 2. Establish Secure Snowflake Connection for Streamlit Cloud
+# 2. Hybrid Connection Architecture (Detects Platform Environment Automatically)
 def get_active_session():
-    import snowflake.connector
-    # This reads credentials securely from your Streamlit Secrets or Environment Variables
-    conn = snowflake.connector.connect(
-        user=os.getenv("SNOWFLAKE_USER"),
-        password=os.getenv("SNOWFLAKE_PASSWORD"),
-        account=os.getenv("SNOWFLAKE_ACCOUNT"),
-        warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
-        database="HACKATHON_RISK_DB",
-        schema="RISK_SCHEMA"
-    )
-    return conn
+    try:
+        # If running INSIDE Snowflake, this succeeds instantly
+        from snowflake.snowpark.context import get_active_session
+        return get_active_session(), "NATIVE"
+    except ImportError:
+        # Fallback for running OUTSIDE on external Streamlit Web Apps
+        import snowflake.connector
+        conn = snowflake.connector.connect(
+            user=os.getenv("SNOWFLAKE_USER"),
+            password=os.getenv("SNOWFLAKE_PASSWORD"),
+            account=os.getenv("SNOWFLAKE_ACCOUNT"),
+            warehouse=os.getenv("SNOWFLAKE_WAREHOUSE"),
+            database="HACKATHON_RISK_DB",
+            schema="RISK_SCHEMA"
+        )
+        return conn, "EXTERNAL"
 
 # 3. User Input Query UI
 user_query = st.text_input(
@@ -30,37 +35,34 @@ user_query = st.text_input(
 if user_query:
     with st.spinner("🕵️‍♂️ Orchestrating agent workflow (Data ➔ Evidence ➔ Report)..."):
         try:
-            # Connect to database via regular connector profile
-            conn = get_active_session()
-            cursor = conn.cursor()
-            
-            # --- STEP 1: SIGNAL DETECTION (Structured SQL) ---
+            conn, env_mode = get_active_session()
             signal_sql = """
                 SELECT t.transaction_id, t.account_id, a.customer_name, t.amount, t.country_code, a.kyc_status
                 FROM TRANSACTION_LEDGER t
                 JOIN ACCOUNT_MASTER a ON t.account_id = a.account_id
                 WHERE t.amount > 5000000 AND a.kyc_status = 'PENDING';
             """
-            cursor.execute(signal_sql)
-            records = cursor.fetchall()
             
-            # Load transaction rows into standard pandas dataframe
-            df_signals = pd.DataFrame(records, columns=['TRANSACTION_ID', 'ACCOUNT_ID', 'CUSTOMER_NAME', 'AMOUNT', 'COUNTRY_CODE', 'KYC_STATUS'])
-            
-            # --- STEP 2: EVIDENCE GATHERING (Unstructured Text) ---
-            cursor.execute("SELECT content_chunk FROM POLICIES_TEXT_BASE")
-            policy_rows = cursor.fetchall()
-            policy_context = "\n".join([row[0] for row in policy_rows])
+            # --- EXTRACT STRUCTURED SIGNALS ---
+            if env_mode == "NATIVE":
+                df_signals = conn.sql(signal_sql).to_pandas()
+                policy_rows = conn.sql("SELECT content_chunk FROM POLICIES_TEXT_BASE").to_pandas()
+                policy_context = "\n".join(policy_rows['CONTENT_CHUNK'].tolist())
+            else:
+                cursor = conn.cursor()
+                cursor.execute(signal_sql)
+                df_signals = pd.DataFrame(cursor.fetchall(), columns=['TRANSACTION_ID', 'ACCOUNT_ID', 'CUSTOMER_NAME', 'AMOUNT', 'COUNTRY_CODE', 'KYC_STATUS'])
+                cursor.execute("SELECT content_chunk FROM POLICIES_TEXT_BASE")
+                policy_context = "\n".join([row[0] for row in cursor.fetchall()])
+                cursor.close()
 
-            # --- DISPLAY DASHBOARD LAYOUT GRID ---
+            # --- DISPLAY GRID SPLIT LAYOUT ---
             col1, col2 = st.columns(2)
 
             with col1:
                 st.subheader("📊 Live Fraud Signals Detected")
                 if not df_signals.empty:
                     st.dataframe(df_signals, use_container_width=True)
-                    
-                    # Package structured rows into readable string snippets for the AI
                     signal_context = ""
                     for _, row in df_signals.iterrows():
                         signal_context += f"Account {row['CUSTOMER_NAME']} ({row['ACCOUNT_ID']}) transferred {row['AMOUNT']} INR to country {row['COUNTRY_CODE']} with KYC Status: {row['KYC_STATUS']}.\n"
@@ -71,7 +73,6 @@ if user_query:
             with col2:
                 st.subheader("📄 Generated Audit-Ready Report")
                 
-                # Ground the prompt boundary to prevent AI hallucinations
                 prompt = f"""
                 You are an expert compliance officer at an NBFC banking unit. Produce an official, audit-ready Suspicious Transaction Report (STR).
                 
@@ -81,24 +82,30 @@ if user_query:
                 REGULATORY LAW BASELINES:
                 {policy_context}
                 
-                Instructions: Identify compliance violations and cite the exact rule code (e.g. RULE-AML-01 or RULE-KYC-02). Format beautifully using professional markdown headers, lists, and bold text.
+                Instructions: Identify compliance violations and cite the exact rule code (e.g. RULE-AML-01 or RULE-KYC-02). Format beautifully using markdown.
                 """
                 
                 if not df_signals.empty:
-                    # --- STEP 3: EXECUTE CORTEX VIA RAW SQL QUERY ---
-                    # This safely bypasses all session/UDF library validation bugs!
-                    cortex_sql = "SELECT CORTEX.COMPLETE('snowflake-arctic', %s)"
-                    cursor.execute(cortex_sql, (prompt,))
-                    report_output = cursor.fetchone()[0]
+                    # --- EXECUTE CORTEX SAFELY DEPENDING ON ENVIRONMENT ---
+                    if env_mode == "NATIVE":
+                        # Native path uses fast Snowpark compilation
+                        report_df = conn.sql("SELECT CORTEX.COMPLETE('snowflake-arctic', %s)", params=[prompt]).to_pandas()
+                        report_output = str(report_df.iloc[0, 0])
+                    else:
+                        # External Web App extracts data explicitly from raw tuples
+                        cursor = conn.cursor()
+                        cursor.execute("SELECT CORTEX.COMPLETE('snowflake-arctic', %s)", (prompt,))
+                        res = cursor.fetchone()
+                        report_output = str(res[0]) if res else "Error generating output text profile."
+                        cursor.close()
                     
-                    # Render the beautiful compliance report output
                     st.markdown(report_output)
                     st.download_button("📥 Export Report as TXT", data=report_output, file_name="STR_Audit_Report.txt")
                 else:
                     st.info("Awaiting high-risk flags to generate report documentation.")
 
-            cursor.close()
-            conn.close()
+            if env_mode == "EXTERNAL":
+                conn.close()
 
         except Exception as e:
             st.error(f"Error processing transaction pipeline: {str(e)}")
