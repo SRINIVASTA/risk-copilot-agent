@@ -1,0 +1,10 @@
+RBI ANTI-MONEY LAUNDERING (AML) MASTER DIRECTIONS (REVISED 2026)
+
+Section 4.1: High-Value Cross-Border Transfers
+Any single cross-border transaction exceeding INR 5,000,000 (₹50 Lakhs) to high-risk offshore jurisdictions (including Cayman Islands [KY], Switzerland [CH]) must be flagged immediately for enhanced due diligence.
+
+Section 4.2: KYC Compliance Thresholds
+Entities operating with a 'Pending' KYC status are restricted from executing outbound international wire transfers exceeding INR 1,000,000. Any violation constitutes a high-risk compliance breach.
+
+Section 7.3: Structural Anomalies
+Multiple high-value transfers initiated by the same corporate account within a 48-hour window to disparate offshore entities indicate potential layering activities and require an immediate Suspicious Transaction Report (STR) filing.
