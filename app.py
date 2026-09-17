@@ -14,7 +14,7 @@ except ImportError:
 
 st.set_page_config(page_title="Risk & Fraud Copilot", page_icon="🛡️", layout="wide")
 
-st.title("🛡️ Risk, Fraud, and Regulatory Intelligence Copilot (Gemini Edition)")
+st.title("🛡️ Risk, Fraud, and Regulatory Intelligence Copilot")
 st.caption("Demonstrating Full Line-of-Custody: Signal Detection ➔ Evidence Gathering ➔ Audit Generation")
 
 # ─── 🔑 AUTHENTICATION LAYER ───
@@ -66,6 +66,17 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
         st.warning("No anomalies detected for this configuration threshold.")
     else:
         st.success(f"Detected {len(signals)} matching high-risk account profiles.")
+        
+        # 📊 HIGH IMPACT JUDGE METRICS DISPLAY
+        total_flagged_amt = sum([item['AMOUNT'] for item in signals])
+        avg_risk_score = sum([item['RISK_SCORE'] for item in signals]) / len(signals)
+        
+        col1, col2, col3 = st.columns(3)
+        col1.metric(label="🚨 Flagged Accounts Count", value=f"{len(signals)} Accounts")
+        col2.metric(label="💰 Total Capital Exposure", value=f"₹{total_flagged_amt:,}")
+        col3.metric(label="⚠️ Average Network Risk Factor", value=f"{avg_risk_score:.1f}%")
+        
+        st.markdown("### Active Anomalous System Payload")
         st.dataframe(signals, use_container_width=True)
         
         # Step 2: Evidence Gathering
