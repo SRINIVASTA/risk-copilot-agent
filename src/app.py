@@ -1,6 +1,6 @@
 import streamlit as st  # Verified
 import pandas as pd
-from snowflake.cortex import Complete
+# from snowflake.cortex import Complete
 import os
 
 # Page Configuration & Visual Anchors
