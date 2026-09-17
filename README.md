@@ -8,16 +8,17 @@ A high-performance Python & Streamlit compliance agent engineered to trace an ab
 
 The application handles data ingestion and analysis through three distinct logical layers:
 
-[User Input Threshold]
+  🪐 [USER INPUT] ────────► Threshold-driven compliance execution trigger
          │
          ▼
-1. SIGNAL DETECTION  ──► Joins Transaction & KYC Ledgers (Pandas SQL Logic)
-         │
+  📊 【01 . SIGNAL】 ─────► Structured Extraction (Pandas Ledger Cross-Join)
+         │                 └─ Identifies high-risk entity profiles dynamically
          ▼
-2. EVIDENCE GATHERING ──► Semantic Search across RBI Master Directions (FAISS + Gemini)
-         │
+  🔎 【02 . EVIDENCE】 ───► Unstructured RAG (FAISS Local Semantic Store)
+         │                 └─ Maps statutory rules & verbatim policy breaches
          ▼
-3. AUDIT COMPLETION   ──► Generates formal Suspicious Transaction Reports (Gemini 2.5)
+  📝 【03 . REPORT】 ─────► Intelligent Orchestration (Gemini LLM Synthesis)
+                           └─ Compiles populated, audit-ready STR markdown document
 
 ---
 
