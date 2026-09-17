@@ -1,6 +1,6 @@
 # 🛡️ Risk, Fraud, and Regulatory Intelligence Copilot
 
-A high-performance Python & Streamlit compliance agent engineered to trace an absolute, auditable line of custody for financial institutions. This application replaces manual compliance workflows by seamlessly bridging the gap between isolated transactional databases and dense regulatory frameworks.
+A high-performance Python & Streamlit compliance agent engineered to trace an absolute, auditable line of custody for financial institutions. This application replaces manual compliance workflows by seamlessly bridging the gap between isolated transactional databases, interactive data analytics, and dense regulatory frameworks.
 
 ---
 
@@ -21,7 +21,7 @@ The application handles data ingestion and analysis through three distinct logic
 3. AUDIT COMPLETION   ──► Generates formal Suspicious Transaction Reports (Gemini 2.5)
 ```
 
-1. **Signal Detection (Structured Data):** Evaluates live relational tables (`transaction_ledger.csv` and `account_master.csv`) to immediately isolate high-risk transaction spikes, unverified account transfers, and outlier risk scores.
+1. **Signal Detection (Structured Data & Interactive Analytics):** Evaluates live relational tables (`transaction_ledger.csv` and `account_master.csv`) to immediately isolate high-risk transaction spikes, unverified account transfers, and outlier risk scores. Renders high-impact KPI scorecards and an interactive **Plotly** data visualization showing capital exposure colored by risk intensity.
 2. **Evidence Gathering (Unstructured RAG Data):** Uses a local vector database built with `faiss-cpu` and Google's production `gemini-embedding-001` to query and locate the exact compliance clauses broken within text-based policy documentation (`rbi_aml_directions.txt`).
 3. **Audit-Ready Report Generation (Workflow Completion):** Fuses the transaction records with raw regulatory citations into a structured, strict markdown container using `gemini-2.5-flash`, preparing an official Suspicious Transaction Report (STR) for immediate export.
 
@@ -39,7 +39,7 @@ risk-copilot-agent/
 ├── policies/
 │   └── rbi_aml_directions.txt      # Unstructured RBI AML framework directions
 │
-├── app.py                          # Streamlit UX frontend dashboard wrapper
+├── app.py                          # Streamlit UX frontend dashboard wrapper with Plotly charts
 ├── copilot_engine.py               # Vector database indexer & LLM pipeline logic
 └── requirements.txt                # Production dependency registry
 ```
@@ -60,4 +60,4 @@ risk-copilot-agent/
 3. Input your secure **Google API Key** into the frontend sidebar mask component to unlock the system.
 
 ### Cloud Deployment
-This project is fully tailored for one-click distribution on **Streamlit Community Cloud**. It features an explicit, self-healing runtime dependency injector block that synchronizes underlying libraries automatically upon code check-ins.
+This project is fully tailored for one-click distribution on **Streamlit Community Cloud**. It features an explicit, self-healing runtime dependency injector block that synchronizes underlying libraries (including Plotly and Google GenAI) automatically upon code check-ins.
