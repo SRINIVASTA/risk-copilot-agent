@@ -3,13 +3,12 @@ import subprocess
 import sys
 import os
 
-# ─── 🛠️ EMERGENCY RUNTIME ENVIRONMENT CHECK ───
-# Installs any missing dependencies directly inside the running cloud machine instance
+# ─── 🛠️ RUNTIME ENVIRONMENT SYNC ───
 try:
-    import langchain_google_genai
+    from langchain_google_genai import GoogleGenerativeAIEmbeddings
     import faiss
 except ImportError:
-    with st.spinner("🔧 Configuring application runtime dependencies... Please wait."):
+    with st.spinner("🔧 Synchronizing production environment layers..."):
         subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "langchain-google-genai>=1.0.0", "faiss-cpu>=1.8.0"])
     st.rerun()
 
@@ -27,14 +26,18 @@ user_key = st.sidebar.text_input(
 )
 
 if user_key:
+    # Force reset the cache if the key changes to prevent stale data
+    if st.session_state.get("active_key") != user_key:
+        st.session_state["active_key"] = user_key
+        st.cache_resource.clear()
     os.environ["GOOGLE_API_KEY"] = user_key
 
-# Prevent backend crashes before key is populated
+# Stop execution before hitting any unauthenticated code pathways
 if not os.environ.get("GOOGLE_API_KEY"):
     st.info("💡 **Welcome!** Please enter your **Google API Key** in the sidebar panel to unlock the live Gemini data pipelines.")
     st.stop()
 
-# Safe Import of engine after environment verification passes
+# Safe import after key environment mapping has completed successfully
 from copilot_engine import FraudCopilotEngine
 
 @st.cache_resource
@@ -45,7 +48,7 @@ try:
     engine = init_engine()
 except Exception as e:
     st.error(f"❌ Initialization Error: {e}")
-    st.info("Please verify your API key is correct and valid inside Google AI Studio.")
+    st.info("If you still see a 404 error, click 'Manage app' and run a clean Reboot to wipe the old state cache.")
     st.stop()
 
 # ─── 🎛️ CONTROL PANEL & PIPELINE ───
