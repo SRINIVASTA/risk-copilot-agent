@@ -3,17 +3,16 @@ import subprocess
 import sys
 import os
 
-# ─── 🛠️ EMERGENCY RUNTIME ENVIRONMENT INJECTION ───
-# Forces installation of missing modules directly into the cloud node if requirements.txt was skipped
+# ─── 🛠️ EMERGENCY RUNTIME ENVIRONMENT CHECK ───
+# Installs any missing dependencies directly inside the running cloud machine instance
 try:
     import langchain_google_genai
     import faiss
 except ImportError:
     with st.spinner("🔧 Configuring application runtime dependencies... Please wait."):
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "langchain-google-genai==1.0.8", "faiss-cpu>=1.8.0"])
+        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "langchain-google-genai>=1.0.0", "faiss-cpu>=1.8.0"])
     st.rerun()
 
-# Set layout configurations directly
 st.set_page_config(page_title="Risk & Fraud Copilot", page_icon="🛡️", layout="wide")
 
 st.title("🛡️ Risk, Fraud, and Regulatory Intelligence Copilot (Gemini Edition)")
@@ -30,12 +29,12 @@ user_key = st.sidebar.text_input(
 if user_key:
     os.environ["GOOGLE_API_KEY"] = user_key
 
-# Prevent backend execution or crashes before key is populated
+# Prevent backend crashes before key is populated
 if not os.environ.get("GOOGLE_API_KEY"):
     st.info("💡 **Welcome!** Please enter your **Google API Key** in the sidebar panel to unlock the live Gemini data pipelines.")
     st.stop()
 
-# Import the engine ONLY after dependencies are verified and the environment key is confirmed
+# Safe Import of engine after environment verification passes
 from copilot_engine import FraudCopilotEngine
 
 @st.cache_resource
