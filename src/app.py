@@ -81,18 +81,19 @@ if user_query:
                 
                 if not df_signals.empty:
                     # --- PHASE 3: CORTEX INFERENCE VIA STRING QUERY ---
-                    # Calling the API endpoint directly via SQL prevents the 'No Default Session' exception!
                     cursor.execute("SELECT CORTEX.COMPLETE('snowflake-arctic', %s)", (prompt,))
                     query_result = cursor.fetchone()
                     
-                    # Safely isolate the inner string from the database object tuple array
-                    if query_result and len(query_result) > 0:
-                        report_output = str(query_result[0])
+                    # 💡 FIX: Safely extract the inner string out of the database tuple array
+                    if query_result and isinstance(query_result, (tuple, list)) and len(query_result) > 0:
+                        report_output = query_result[0] # Grab the first item out of the tuple array
+                    elif isinstance(query_result, str):
+                        report_output = query_result
                     else:
                         report_output = "⚠️ Error: The database warehouse failed to return a valid response layout context."
                     
-                    # Display response text element layout
-                    st.markdown(report_output)
+                    # Display response text element layout cleanly
+                    st.text_area("📋 Generated Audit Logs", value=report_output, height=400)
                     st.download_button("📥 Export Report as TXT File", data=report_output, file_name="STR_Audit_Report.txt")
                 else:
                     st.info("Awaiting high-risk flags to generate report documentation.")
