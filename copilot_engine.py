@@ -16,8 +16,8 @@ class FraudCopilotEngine:
         chunks = [chunk.strip() for chunk in policy_content.split("\n\n") if chunk.strip()]
         
         # 3. Model Engine Init (Picks up GOOGLE_API_KEY dynamically from app environment)
-        # Using GoogleGenerativeAIEmbeddings to resolve the import failure
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/text-embedding-004")
+        # CHANGED: Switched to "text-embedding-004" to avoid the 404 API version mismatch
+        self.embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
         self.vector_db = FAISS.from_texts(chunks, self.embeddings)
         self.llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0)
 
