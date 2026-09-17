@@ -1,4 +1,4 @@
-import streamlit as tf
+import streamlit as st
 import pandas as pd
 import snowflake.permissions as permissions
 from snowflake.cortex import Complete
