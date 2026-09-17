@@ -1,10 +1,9 @@
-import streamlit as st
+import streamlit as st  # Verified
 import pandas as pd
-import snowflake.permissions as permissions
 from snowflake.cortex import Complete
 import os
 
-# 1. Page Configuration & Visual Anchors
+# Page Configuration & Visual Anchors
 st.set_page_config(page_title="Risk & AML Copilot", layout="wide")
 st.title("🏦 Risk, Fraud & Regulatory Intelligence Copilot")
 st.caption("Snowflake CoCo CLI Hackathon — GCC Edition 2026")
