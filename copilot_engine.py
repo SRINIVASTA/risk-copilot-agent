@@ -5,18 +5,18 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGener
 
 class FraudCopilotEngine:
     def __init__(self):
-        # 1. Load your separate text/csv data components from your /data/ folder
+        # 1. Load structured components from your repository folders
         self.tx_df = pd.read_csv("data/transaction_ledger.csv")
         self.acc_df = pd.read_csv("data/account_master.csv")
         
-        # 2. Extract unstructured policies from your /policies/ folder
+        # 2. Extract unstructured policies
         with open("policies/rbi_aml_directions.txt", "r") as f:
             policy_content = f.read()
         
         chunks = [chunk.strip() for chunk in policy_content.split("\n\n") if chunk.strip()]
         
-        # 3. Model Engine Init (Picks up GOOGLE_API_KEY dynamically from app environment)
-        # CHANGED: Switched to "text-embedding-004" to avoid the 404 API version mismatch
+        # 3. Model Engine Setup
+        # Fixed model parameter mapping to comply with the Google AI Studio production API
         self.embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
         self.vector_db = FAISS.from_texts(chunks, self.embeddings)
         self.llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0)
