@@ -1,5 +1,0 @@
-account_id,customer_name,kyc_status,customer_type,risk_category
-ACC_8821,Alpha Shell Holdings,PENDING,CORPORATE,HIGH
-ACC_1145,Rajesh Kumar,VERIFIED,INDIVIDUAL,LOW
-ACC_3321,Global Trade Impex,VERIFIED,CORPORATE,MEDIUM
-ACC_5567,Zenith Consulting,PENDING,CORPORATE,HIGH
