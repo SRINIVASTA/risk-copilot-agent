@@ -16,10 +16,12 @@ class FraudCopilotEngine:
         chunks = [chunk.strip() for chunk in policy_content.split("\n\n") if chunk.strip()]
         
         # 3. Model Engine Setup
-        # FIXED: Switched model string to "models/gemini-embedding-001" to match current Google API endpoints
+        # Verified working embedding target configuration
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
         self.vector_db = FAISS.from_texts(chunks, self.embeddings)
-        self.llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0)
+        
+        # FIXED: Switched model string to "gemini-2.5-flash" to comply with newest Google SDK changes
+        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
 
     def detect_signals(self, min_amount=5000000):
         """Step 1: Signal Detection (Structured Data)"""
