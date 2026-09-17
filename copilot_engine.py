@@ -20,8 +20,8 @@ class FraudCopilotEngine:
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
         self.vector_db = FAISS.from_texts(chunks, self.embeddings)
         
-        # FIXED: Switched model string to "gemini-2.5-flash" to comply with newest Google SDK changes
-        self.llm = ChatGoogleGenerativeAI(model="gemini-2.5-flash", temperature=0)
+        # FIXED: Explicitly used the 'models/' prefix for the chat LLM to prevent the GoogleModelNotFoundError routing bug
+        self.llm = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash", temperature=0)
 
     def detect_signals(self, min_amount=5000000):
         """Step 1: Signal Detection (Structured Data)"""
@@ -57,7 +57,7 @@ class FraudCopilotEngine:
         # SUSPICIOUS TRANSACTION REPORT (STR)
         
         ## 📌 1. EXECUTIVE SUMMARY
-        [Provide a summary of the compliance breaches found.]
+        Provide a detailed executive summary here explaining the overall risk, flagged entries, and systemic vulnerability found.
         
         ## 📊 2. FLAGGED TRANSACTION LEDGER
 
