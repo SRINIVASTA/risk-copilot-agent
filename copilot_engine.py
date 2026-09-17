@@ -16,8 +16,8 @@ class FraudCopilotEngine:
         chunks = [chunk.strip() for chunk in policy_content.split("\n\n") if chunk.strip()]
         
         # 3. Model Engine Setup
-        # Fixed model parameter mapping to comply with the Google AI Studio production API
-        self.embeddings = GoogleGenerativeAIEmbeddings(model="text-embedding-004")
+        # FIXED: Switched model identifier to "models/embedding-001" to match Google API expectations
+        self.embeddings = GoogleGenerativeAIEmbeddings(model="models/embedding-001")
         self.vector_db = FAISS.from_texts(chunks, self.embeddings)
         self.llm = ChatGoogleGenerativeAI(model="gemini-1.5-pro", temperature=0)
 
