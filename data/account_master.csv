@@ -1,11 +1,11 @@
-ACCOUNT_ID	CUSTOMER_NAME	KYC_STATUS	CUSTOMER_TYPE
-ACC_991	Alpha Global Holdings	Pending	Corporate
-ACC_112	Rajesh Kumar	Verified	Individual
-ACC_445	Omega Trade Corp	Verified	Corporate
-ACC_101	Srinivasta Enterprises	Verified	Corporate
-ACC_202	Anita Sharma	Pending	Individual
-ACC_303	Zeta Logistics	Suspended	Corporate
-ACC_505	Vikram Malhotra	Verified	Individual
-ACC_606	Sigma Ventures	Pending	Corporate
-ACC_707	Priya Patel	Verified	Individual
-ACC_808	Nexus Infotech	Verified	Corporate
+ACCOUNT_ID,CUSTOMER_NAME,KYC_STATUS,CUSTOMER_TYPE
+ACC_991,Alpha Global Holdings,Pending,Corporate
+ACC_112,Rajesh Kumar,Verified,Individual
+ACC_445,Omega Trade Corp,Verified,Corporate
+ACC_101,Srinivasta Enterprises,Verified,Corporate
+ACC_202,Anita Sharma,Pending,Individual
+ACC_303,Zeta Logistics,Suspended,Corporate
+ACC_505,Vikram Malhotra,Verified,Individual
+ACC_606,Sigma Ventures,Pending,Corporate
+ACC_707,Priya Patel,Verified,Individual
+ACC_808,Nexus Infotech,Verified,Corporate
