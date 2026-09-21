@@ -72,7 +72,10 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
         total_incidents = len(signals_df)
         st.success(f"Detected {total_incidents} matching high-risk account profiles.")
         
-        # Vectorized calculations mapped to uppercase schema headers
+        # Force a safety alignment of column cases within the App execution context
+        signals_df.columns = signals_df.columns.str.strip().str.upper()
+        
+        # Vectorized calculations mapped to explicit uppercase schema headers
         total_flagged_amt = int(signals_df["AMOUNT"].sum())
         avg_risk_score = float(signals_df["RISK_SCORE"].mean())
         
@@ -84,19 +87,26 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
         st.markdown("### Active Anomalous System Payload (PEP Monitored)")
         st.dataframe(signals_df, use_container_width=True)
         
-        # ─── 📈 PLOTLY VISUALIZATION LAYER ───
-        fig = px.bar(
-            signals_df, 
-            x="TRANSACTION_ID", 
-            y="AMOUNT", 
-            color="RISK_SCORE",
-            hover_data=["CUSTOMER_NAME", "COUNTRY_CODE", "KYC_STATUS", "IS_PEP"],
-            labels={"TRANSACTION_ID": "Transaction ID", "AMOUNT": "Amount (INR)", "RISK_SCORE": "Risk Score Level"},
-            title="Anomalous Transaction Exposure & Associated Risk Index",
-            color_continuous_scale="Reds"
-        )
-        fig.update_layout(template="plotly_dark", title_x=0.0)
-        st.plotly_chart(fig, use_container_width=True)
+        # ─── 📈 FIXED PLOTLY VISUALIZATION LAYER ───
+        # Build strict fallback checks to prevent Plotly Express processing crashes
+        available_cols = list(signals_df.columns)
+        hover_targets = [col for col in ["CUSTOMER_NAME", "COUNTRY_CODE", "KYC_STATUS", "IS_PEP"] if col in available_cols]
+        
+        try:
+            fig = px.bar(
+                signals_df, 
+                x="TRANSACTION_ID" if "TRANSACTION_ID" in available_cols else available_cols[0], 
+                y="AMOUNT" if "AMOUNT" in available_cols else available_cols[1], 
+                color="RISK_SCORE" if "RISK_SCORE" in available_cols else None,
+                hover_data=hover_targets,
+                labels={"TRANSACTION_ID": "Transaction ID", "AMOUNT": "Amount (INR)", "RISK_SCORE": "Risk Level"},
+                title="Anomalous Transaction Exposure & Associated Risk Index",
+                color_continuous_scale="Reds"
+            )
+            fig.update_layout(template="plotly_dark", title_x=0.0)
+            st.plotly_chart(fig, use_container_width=True)
+        except Exception as chart_err:
+            st.warning(f"📊 Visualization Layout Notice: {chart_err}. Renders default grid views instead.")
         
         # Step 2: Evidence Gathering
         st.header("🔎 Step 2: Evidence Gathering (Vector Store / RAG)")
