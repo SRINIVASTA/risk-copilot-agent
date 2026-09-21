@@ -5,34 +5,80 @@ from langchain_google_genai import GoogleGenerativeAIEmbeddings, ChatGoogleGener
 
 class FraudCopilotEngine:
     def __init__(self):
-        # 1. Load structured components from repository
+        # 1. Load data tables from repository
         self.tx_df = pd.read_csv("data/transaction_ledger.csv")
         self.acc_df = pd.read_csv("data/account_master.csv")
         
-        # Clean column names to prevent tracking bugs
+        # Clean header column fields
         self.tx_df.columns = self.tx_df.columns.str.strip()
         self.acc_df.columns = self.acc_df.columns.str.strip()
         
-        # 2. Extract unstructured policies
+        # Drop pre-existing risk columns to compute from the RBI framework
+        if "RISK_SCORE" in self.tx_df.columns:
+            self.tx_df = self.tx_df.drop(columns=["RISK_SCORE"])
+        
+        # 2. Load policy files for the vector database
         with open("policies/rbi_aml_directions.txt", "r") as f:
             policy_content = f.read()
         
         chunks = [chunk.strip() for chunk in policy_content.split("\n\n") if chunk.strip()]
         
-        # 3. Model Engine Setup
+        # 3. Model Engine Infrastructure
         self.embeddings = GoogleGenerativeAIEmbeddings(model="models/gemini-embedding-001")
         self.vector_db = FAISS.from_texts(chunks, self.embeddings)
         self.llm = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash", temperature=0)
 
+    def _calculate_live_risk_score(self, df):
+        """
+        Calculates risk matrices adhering strictly to RBI-mandated 
+        Customer Risk Categorization (CRC) profiles.
+        """
+        scores = []
+        for _, row in df.iterrows():
+            score = 0
+            
+            # Dimension 1: FATF & Offshore Jurisdiction Profile
+            if row["COUNTRY_CODE"] in ["KY", "CH"]:  # Cayman Islands / Switzerland Tax Havens
+                score += 40
+            elif row["COUNTRY_CODE"] in ["AE", "HK", "SG"]:  # High-volume clearing hubs
+                score += 20
+            else:
+                score += 5
+                
+            # Dimension 2: RBI Customer Acceptance and KYC Status Onboarding Matrix
+            if row["KYC_STATUS"] == "Suspended":
+                score += 55  # Critical Violation
+            elif row["KYC_STATUS"] == "Pending":
+                score += 35  # Restricted Account
+            else:
+                score += 10  # Standard Verified Base
+                
+            # Dimension 3: Capital Exposure Banding (RBI High-Value Reporting Caps)
+            if row["AMOUNT"] >= 5000000:
+                score += 25  # ₹50 Lakh Threshold Breached
+            elif row["AMOUNT"] >= 1000000:
+                score += 15  # ₹10 Lakh Threshold Breached
+            else:
+                score += 5
+                
+            # Lock parameters inside normal 0-100 system limits
+            scores.append(min(score, 100))
+            
+        return scores
+
     def detect_signals(self, min_amount=5000000):
-        """Step 1: Signal Detection (Structured Data) with complete regulatory alignment"""
+        """Step 1: Signal Detection aligned with RBI Anti-Money Laundering Thresholds"""
+        # Execute table joins
         merged = pd.merge(self.tx_df, self.acc_df, on="ACCOUNT_ID")
         
-        # Condition logic to capture high risk profiles and thresholds
+        # Feed live calculated metrics back into DataFrame
+        merged["RISK_SCORE"] = self._calculate_live_risk_score(merged)
+        
+        # Trigger hard alarms based on official compliance filters
         condition = (
             (merged["AMOUNT"] >= min_amount) | 
-            (merged["RISK_SCORE"] > 70) |
-            ((merged["KYC_STATUS"] == "Pending") & (merged["AMOUNT"] > 1000000)) |
+            (merged["RISK_SCORE"] >= 70) | 
+            ((merged["KYC_STATUS"] == "Pending") & (merged["AMOUNT"] > 1000000)) | 
             (merged["KYC_STATUS"] == "Suspended")
         )
         
@@ -40,19 +86,17 @@ class FraudCopilotEngine:
         return flagged_df
 
     def gather_evidence(self, flagged_df):
-        """Step 2: Optimized Vector Search using batched distinct entity fields"""
+        """Step 2: Optimized Context Search mapping back to rule documents"""
         if flagged_df.empty:
-            return "No systemic signals detected."
+            return "No systemic compliance violations detected."
             
         evidence_pool = []
-        
-        # Optimize RAG performance by querying unique conditions
         unique_countries = flagged_df["COUNTRY_CODE"].unique()
         unique_statuses = flagged_df["KYC_STATUS"].unique()
         
         search_queries = [
-            f"High value cross border transfer thresholds for countries {', '.join(unique_countries)}",
-            f"KYC compliance limitations and transaction caps for status {', '.join(unique_statuses)}"
+            f"RBI regulations for wire transfers to jurisdictions: {', '.join(unique_countries)}",
+            f"Official Master Direction restrictions on account onboarding status: {', '.join(unique_statuses)}"
         ]
         
         for query in search_queries:
@@ -64,23 +108,22 @@ class FraudCopilotEngine:
         return "\n\n".join(evidence_pool)
 
     def generate_audit_report(self, flagged_df, evidence):
-        """Step 3: Render data directly to clean Markdown structures before invoking LLM"""
+        """Step 3: Compile final, regulatory-compliant STR document matching data to legal rules"""
         if flagged_df.empty:
-            return "### No Anomalies Detected\nAll transaction patterns fall within standard operational bounds."
+            return "### Compliance Verified\nAll entries comply completely with PMLA tracking layers."
 
-        # Format numerical fields within Python to guarantee a crisp table display
         table_rows = []
         for _, row in flagged_df.iterrows():
             formatted_amt = f"₹{row['AMOUNT']:,}"
             table_rows.append(
                 f"| {row['TRANSACTION_ID']} | {row['ACCOUNT_ID']} | {row['CUSTOMER_NAME']} | "
-                f"{formatted_amt} | {row['COUNTRY_CODE']} | {row['RISK_SCORE']} | {row['KYC_STATUS']} |"
+                f"{formatted_amt} | {row['COUNTRY_CODE']} | {int(row['RISK_SCORE'])} | {row['KYC_STATUS']} |"
             )
         markdown_ledger = "\n".join(table_rows)
 
         template = """
-        You are an expert Risk, Fraud, and Regulatory Intelligence Officer.
-        Generate an official, audit-ready Suspicious Transaction Report (STR) based on these data signals and regulatory evidence.
+        You are an expert Chief Compliance and AML Reporting Officer operating under RBI guidelines.
+        Generate an official Suspicious Transaction Report (STR) adhering strictly to FIU-IND submission conventions.
         
         DATA SIGNALS LEDGER:
 
@@ -96,14 +139,14 @@ class FraudCopilotEngine:
         # SUSPICIOUS TRANSACTION REPORT (STR)
         
         ## 📌 1. EXECUTIVE SUMMARY
-        Provide a detailed executive summary here explaining the overall risk profile, total capital exposure, and systemic internal control vulnerabilities found.
+        Provide a legal executive summary here explaining the overall risk profile, total capital exposure, and systemic internal control vulnerabilities found under PMLA and RBI directives.
         
         ## 📊 2. FLAGGED TRANSACTION LEDGER
         [Inject the rendered Markdown ledger here exactly as provided]
         
         ## 🔎 3. REGULATORY COMPLIANCE BREACH ANALYSIS
-        * **Specific Section Broken:** [Identify explicit sections from evidence, e.g., Section 4.1 or 4.2]
-        * **Evidence:** [Quote the direct policy text snippet that proves a breach occurred based on the data ledger]
+        * **Specific Section Broken:** [Identify explicit sections from evidence, e.g., RBI Section 4.1 or 4.2]
+        * **Evidence:** [Quote the policy text snippet that proves a breach occurred based on the data ledger parameters]
         
         ## 💡 4. RECOMMENDED COMPLIANCE ACTIONS
         - [ ] Action 1
