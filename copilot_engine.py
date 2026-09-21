@@ -1,3 +1,4 @@
+# Save this file as: copilot_engine.py
 import pandas as pd
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
@@ -13,7 +14,7 @@ class FraudCopilotEngine:
         self.tx_df.columns = self.tx_df.columns.str.strip()
         self.acc_df.columns = self.acc_df.columns.str.strip()
         
-        # Drop pre-existing risk columns to compute from the RBI framework
+        # Drop pre-existing risk columns to compute fresh from the RBI framework
         if "RISK_SCORE" in self.tx_df.columns:
             self.tx_df = self.tx_df.drop(columns=["RISK_SCORE"])
         
@@ -31,7 +32,7 @@ class FraudCopilotEngine:
     def _calculate_live_risk_score(self, df):
         """
         Calculates risk matrices adhering strictly to RBI-mandated 
-        Customer Risk Categorization (CRC) profiles.
+        Customer Risk Categorization (CRC) profiles, now with PEP monitoring.
         """
         scores = []
         for _, row in df.iterrows():
@@ -60,6 +61,10 @@ class FraudCopilotEngine:
                 score += 15  # ₹10 Lakh Threshold Breached
             else:
                 score += 5
+
+            # Dimension 4: Politically Exposed Person (PEP) Flag Check
+            if str(row["IS_PEP"]).strip().lower() == "true":
+                score += 30  # High-impact political exposure multiplier
                 
             # Lock parameters inside normal 0-100 system limits
             scores.append(min(score, 100))
@@ -74,12 +79,13 @@ class FraudCopilotEngine:
         # Feed live calculated metrics back into DataFrame
         merged["RISK_SCORE"] = self._calculate_live_risk_score(merged)
         
-        # Trigger hard alarms based on official compliance filters
+        # Trigger hard alarms based on official compliance filters (including PEP overrides)
         condition = (
             (merged["AMOUNT"] >= min_amount) | 
             (merged["RISK_SCORE"] >= 70) | 
             ((merged["KYC_STATUS"] == "Pending") & (merged["AMOUNT"] > 1000000)) | 
-            (merged["KYC_STATUS"] == "Suspended")
+            (merged["KYC_STATUS"] == "Suspended") |
+            (merged["IS_PEP"] == True)
         )
         
         flagged_df = merged[condition].copy()
@@ -96,7 +102,8 @@ class FraudCopilotEngine:
         
         search_queries = [
             f"RBI regulations for wire transfers to jurisdictions: {', '.join(unique_countries)}",
-            f"Official Master Direction restrictions on account onboarding status: {', '.join(unique_statuses)}"
+            f"Official Master Direction restrictions on account onboarding status: {', '.join(unique_statuses)}",
+            "Enhanced due diligence requirements for Politically Exposed Persons PEP profiles"
         ]
         
         for query in search_queries:
@@ -115,9 +122,10 @@ class FraudCopilotEngine:
         table_rows = []
         for _, row in flagged_df.iterrows():
             formatted_amt = f"₹{row['AMOUNT']:,}"
+            pep_status = "🔴 YES" if row['IS_PEP'] else "🟢 NO"
             table_rows.append(
                 f"| {row['TRANSACTION_ID']} | {row['ACCOUNT_ID']} | {row['CUSTOMER_NAME']} | "
-                f"{formatted_amt} | {row['COUNTRY_CODE']} | {int(row['RISK_SCORE'])} | {row['KYC_STATUS']} |"
+                f"{formatted_amt} | {row['COUNTRY_CODE']} | {int(row['RISK_SCORE'])} | {row['KYC_STATUS']} | {pep_status} |"
             )
         markdown_ledger = "\n".join(table_rows)
 
@@ -127,8 +135,8 @@ class FraudCopilotEngine:
         
         DATA SIGNALS LEDGER:
 
-        | Transaction ID | Account ID | Customer Name | Amount (INR) | Destination | Risk Score | KYC Status |
-        | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
+        | Transaction ID | Account ID | Customer Name | Amount (INR) | Destination | Risk Score | KYC Status | PEP Flag |
+        | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
         {markdown_ledger}
         
         REGULATORY EVIDENCE BASE:
@@ -139,7 +147,7 @@ class FraudCopilotEngine:
         # SUSPICIOUS TRANSACTION REPORT (STR)
         
         ## 📌 1. EXECUTIVE SUMMARY
-        Provide a legal executive summary here explaining the overall risk profile, total capital exposure, and systemic internal control vulnerabilities found under PMLA and RBI directives.
+        Provide a legal executive summary here explaining the overall risk profile, total capital exposure, and systemic internal control vulnerabilities found under PMLA and RBI directives. Explicitly mention if any Politically Exposed Persons (PEPs) triggered alerts.
         
         ## 📊 2. FLAGGED TRANSACTION LEDGER
         [Inject the rendered Markdown ledger here exactly as provided]
