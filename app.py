@@ -1,3 +1,4 @@
+# Save this file as: app.py
 import streamlit as st
 import subprocess
 import sys
@@ -81,7 +82,7 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
         col2.metric(label="💰 Total Capital Exposure", value=f"₹{total_flagged_amt:,}")
         col3.metric(label="⚠️ Average Network Risk Factor", value=f"{avg_risk_score:.1f}%")
         
-        st.markdown("### Active Anomalous System Payload")
+        st.markdown("### Active Anomalous System Payload (PEP Monitored)")
         st.dataframe(signals_df, use_container_width=True)
         
         # ─── 📈 PLOTLY VISUALIZATION LAYER ───
@@ -90,7 +91,7 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
             x="TRANSACTION_ID", 
             y="AMOUNT", 
             color="RISK_SCORE",
-            hover_data=["CUSTOMER_NAME", "COUNTRY_CODE", "KYC_STATUS"],
+            hover_data=["CUSTOMER_NAME", "COUNTRY_CODE", "KYC_STATUS", "IS_PEP"],
             labels={"TRANSACTION_ID": "Transaction ID", "AMOUNT": "Amount (INR)", "RISK_SCORE": "Risk Score Level"},
             title="Anomalous Transaction Exposure & Associated Risk Index",
             color_continuous_scale="Reds"
