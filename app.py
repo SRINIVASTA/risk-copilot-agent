@@ -88,15 +88,14 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
         st.dataframe(signals_df, use_container_width=True)
         
         # ─── 📈 FIXED PLOTLY VISUALIZATION LAYER ───
-        # Build strict fallback checks to prevent Plotly Express processing crashes
         available_cols = list(signals_df.columns)
         hover_targets = [col for col in ["CUSTOMER_NAME", "COUNTRY_CODE", "KYC_STATUS", "IS_PEP"] if col in available_cols]
         
         try:
             fig = px.bar(
                 signals_df, 
-                x="TRANSACTION_ID" if "TRANSACTION_ID" in available_cols else available_cols[0], 
-                y="AMOUNT" if "AMOUNT" in available_cols else available_cols[1], 
+                x="TRANSACTION_ID" if "TRANSACTION_ID" in available_cols else available_cols, 
+                y="AMOUNT" if "AMOUNT" in available_cols else available_cols, 
                 color="RISK_SCORE" if "RISK_SCORE" in available_cols else None,
                 hover_data=hover_targets,
                 labels={"TRANSACTION_ID": "Transaction ID", "AMOUNT": "Amount (INR)", "RISK_SCORE": "Risk Level"},
