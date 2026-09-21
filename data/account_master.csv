@@ -2,10 +2,10 @@ ACCOUNT_ID	CUSTOMER_NAME	KYC_STATUS	CUSTOMER_TYPE
 ACC_991	Alpha Global Holdings	Pending	Corporate
 ACC_112	Rajesh Kumar	Verified	Individual
 ACC_445	Omega Trade Corp	Verified	Corporate
-ACC_556	Priya Sharma	Verified	Individual
-ACC_778	Apex Logistics Ltd	Pending	Corporate
-ACC_223	Michael Chang	Verified	Individual
-ACC_889	Summit Retail Inc	Suspended	Corporate
-ACC_334	Amina Diop	Verified	Individual
-ACC_667	Vanguard Tech Labs	Pending	Corporate
-ACC_115	David Smith	Verified	Individual
+ACC_101	Srinivasta Enterprises	Verified	Corporate
+ACC_202	Anita Sharma	Pending	Individual
+ACC_303	Zeta Logistics	Suspended	Corporate
+ACC_505	Vikram Malhotra	Verified	Individual
+ACC_606	Sigma Ventures	Pending	Corporate
+ACC_707	Priya Patel	Verified	Individual
+ACC_808	Nexus Infotech	Verified	Corporate
