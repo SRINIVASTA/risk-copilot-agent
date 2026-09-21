@@ -1,3 +1,4 @@
+# ─── BLOCK 1: CORE ENGINE SETUP & DATA NORMALISATION ───
 import pandas as pd
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
@@ -70,10 +71,11 @@ class FraudCopilotEngine:
             if row["IS_PEP"] == True:
                 score += 30  
                 
+            # Lock parameters inside normal 0-100 system limits
             scores.append(min(score, 100))
             
         return scores
-
+# ─── BLOCK 2: DETECT SIGNALS, RAG EVIDENCE, & STR REPORT GENERATION ───
     def detect_signals(self, min_amount=5000000):
         """Step 1: Signal Detection aligned with RBI Anti-Money Laundering Thresholds"""
         merged = pd.merge(self.tx_df, self.acc_df, on="ACCOUNT_ID")
@@ -184,20 +186,24 @@ class FraudCopilotEngine:
             return response.content.replace("[LEDGER_INSERT_MARKER]", markdown_ledger)
 
         except Exception:
-            # 🚨 FALLBACK LAYER: If a Rate Limit Error triggers, instantly generate a clean local markdown template
-            fallback_report = f"""# SUSPICIOUS TRANSACTION REPORT (STR)
-
-## 📌 1. EXECUTIVE SUMMARY
-This official report details systemic suspicious activities and material regulatory breaches identified across multiple corporate accounts. A complete processing of transactional registries revealed **{total_incidents} high-risk incidents** amounting to a total capital exposure of **INR {total_exposure:,}** with an average risk factor of **{avg_risk_factor:.1f}%**. Notably, **{pep_count} entries** involve Politically Exposed Persons (PEPs) matching high-impact auditing criteria. Systemic internal control gaps have permitted out-of-bounds cross-border transfers from restricted 'Pending' and 'Suspended' profiles, requiring immediate system-wide remediation.
-
-## 📊 2. FLAGGED TRANSACTION LEDGER
-
-| Transaction ID | Account ID | Customer Name | Amount (INR) | Destination | Risk Score | KYC Status | PEP Flag |
-| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-{markdown_ledger}
-
-## 🔎 3. REGULATORY COMPLIANCE BREACH ANALYSIS
-* **Specific Section Broken:** Section 4.1 (High-Value Cross-Border Limits) & Section 4.2 (KYC Thresholds)
-* **Evidence:** Multiple entries exceed the INR 5,000,000 ceiling to offshore jurisdictions (KY, CH) without enhanced diligence. Furthermore, accounts operating under 'Pending' onboarding statuses breached the absolute INR 1,000,000 outbound wire cap framework.
-
-## 💡 4. RECOMMENDED COMPLIANCE ACTIONS
+            # 🚨 FIXED FALLBACK LAYER: Safe string addition sequence to bypass raw bracket string parser exceptions
+            fallback_report = (
+                "# SUSPICIOUS TRANSACTION REPORT (STR)\n\n"
+                "## 📌 1. EXECUTIVE SUMMARY\n"
+                f"This official report details systemic suspicious activities and material regulatory breaches identified across multiple corporate accounts. A complete processing of transactional registries revealed **{total_incidents} high-risk incidents** amounting to a total capital exposure of **INR {total_exposure:,}** with an average risk factor of **{avg_risk_factor:.1f}%**. Notably, **{pep_count} entries** involve Politically Exposed Persons (PEPs) matching high-impact auditing criteria. Systemic internal control gaps have permitted out-of-bounds cross-border transfers from restricted 'Pending' and 'Suspended' profiles, requiring immediate system-wide remediation.\n\n"
+                "## 📊 2. FLAGGED TRANSACTION LEDGER\n\n"
+                "| Transaction ID | Account ID | Customer Name | Amount (INR) | Destination | Risk Score | KYC Status | PEP Flag |\n"
+                "| :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |\n"
+                f"{markdown_ledger}\n\n"
+                "## 🔎 3. REGULATORY COMPLIANCE BREACH ANALYSIS\n"
+                "* **Specific Section Broken:** Section 4.1 (High-Value Cross-Border Limits) & Section 4.2 (KYC Thresholds)\n"
+                "* **Evidence:** Multiple entries exceed the INR 5,000,000 ceiling to offshore jurisdictions (KY, CH) without enhanced diligence. Furthermore, accounts operating under 'Pending' onboarding statuses breached the absolute INR 1,000,000 outbound wire cap framework.\n\n"
+                "## 💡 4. RECOMMENDED COMPLIANCE ACTIONS\n"
+                "- [ ] **Lock Restricted Channels:** Immediately suspend outbound international routing privileges for all 'Pending' and 'Suspended' account references.\n"
+                "- [ ] **Deploy Enhanced Screening:** Mandate immediate source of funds validation and senior management clearance for high-risk profiles holding PEP attributes.\n"
+                "- [ ] **Regulatory Reporting Escalation:** Fast-track this structured ledger payload into a batch SAR submission package directed to FIU-IND.\n\n"
+                "---\n"
+                "**Prepared By:** Risk & Compliance Copilot System  \n"
+                "**Review Status:** ⚠️ PENDING HUMAN SIGN-OFF (Fail-Safe Local Mode Activated)"
+            )
+            return fallback_report
