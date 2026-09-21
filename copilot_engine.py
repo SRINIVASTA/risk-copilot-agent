@@ -28,7 +28,7 @@ class FraudCopilotEngine:
         """Step 1: Signal Detection (Structured Data) with complete regulatory alignment"""
         merged = pd.merge(self.tx_df, self.acc_df, on="ACCOUNT_ID")
         
-        # Fixed condition logic to accurately capture the Section 4.2 constraint
+        # Condition logic to capture high risk profiles and thresholds
         condition = (
             (merged["AMOUNT"] >= min_amount) | 
             (merged["RISK_SCORE"] > 70) |
@@ -46,7 +46,7 @@ class FraudCopilotEngine:
             
         evidence_pool = []
         
-        # Optimize RAG performance by querying unique conditions rather than looping through all rows
+        # Optimize RAG performance by querying unique conditions
         unique_countries = flagged_df["COUNTRY_CODE"].unique()
         unique_statuses = flagged_df["KYC_STATUS"].unique()
         
@@ -68,7 +68,7 @@ class FraudCopilotEngine:
         if flagged_df.empty:
             return "### No Anomalies Detected\nAll transaction patterns fall within standard operational bounds."
 
-        # Format numerical fields within Python to guarantee a crisp, readable table display
+        # Format numerical fields within Python to guarantee a crisp table display
         table_rows = []
         for _, row in flagged_df.iterrows():
             formatted_amt = f"₹{row['AMOUNT']:,}"
@@ -106,8 +106,8 @@ class FraudCopilotEngine:
         * **Evidence:** [Quote the direct policy text snippet that proves a breach occurred based on the data ledger]
         
         ## 💡 4. RECOMMENDED COMPLIANCE ACTIONS
-        - [ ] Action 1 (e.g., Freeze specific account lines)
-        - [ ] Action 2 (e.g., File SAR with FIU)
+        - [ ] Action 1
+        - [ ] Action 2
         
         ---
         **Prepared By:** Risk & Compliance Copilot System  
