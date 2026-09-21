@@ -144,6 +144,9 @@ class FraudCopilotEngine:
             f"Politically Exposed Persons Involved: {pep_count}"
         )
 
+        # 🚨 FIX: Explicit wrapper to catch LangChain-specific Google API Exceptions
+        from langchain_google_genai.chat_models import GoogleRateLimitError
+
         try:
             # Attempt to call the standard LLM synthesis chain pipeline
             template = """
@@ -185,8 +188,8 @@ class FraudCopilotEngine:
             response = chain.invoke({"signal_summary": signal_summary, "evidence": evidence})
             return response.content.replace("[LEDGER_INSERT_MARKER]", markdown_ledger)
 
-        except Exception:
-            # 🚨 FIXED FALLBACK LAYER: Safe string addition sequence to bypass raw bracket string parser exceptions
+        except (GoogleRateLimitError, Exception) as e:
+            # 🚨 FALLBACK LAYER: Safely generates a clean local markdown template if limits are tripped
             fallback_report = (
                 "# SUSPICIOUS TRANSACTION REPORT (STR)\n\n"
                 "## 📌 1. EXECUTIVE SUMMARY\n"
