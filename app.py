@@ -143,6 +143,28 @@ with tab1:
                 file_name="Suspicious_Transaction_Report.md",
                 mime="text/markdown"
             )
+
+            # ─── REPLACEMENT TEMPLATE FOR BLOCK 2 (REPORT EXPORT SECTION) ───
+st.subheader("📝 Step 3: Audit-Ready Report Generation")
+with st.spinner("Compiling final markdown template via Gemini..."):
+    report_markdown = engine.generate_audit_report(signals_df, evidence)
+st.markdown(report_markdown)
+
+# READ THE COMPILED PDF BINARY STREAM FOR THE USER
+try:
+    with open("generated/Suspicious_Transaction_Report.pdf", "rb") as pdf_file:
+        pdf_bytes = pdf_file.read()
+    
+    st.download_button(
+        label="📄 Download Official PDF Audit Report",
+        data=pdf_bytes,
+        file_name="Suspicious_Transaction_Report.pdf",
+        mime="application/pdf",
+        use_container_width=True
+    )
+except FileNotFoundError:
+    st.warning("⚠️ Local PDF asset stream could not be loaded. Defaulting to standard Markdown backup.")
+
 # ─── BLOCK 3: TAB 2 — CONVERSATIONAL CORTEX COPILOT ───
 with tab2:
     st.header("💬 Conversational Cortex Copilot Room")
