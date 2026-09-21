@@ -8,9 +8,13 @@ try:
     from langchain_google_genai import GoogleGenerativeAIEmbeddings
     import faiss
     import plotly.express as px
+    import pandas as pd
 except ImportError:
     with st.spinner("🔧 Synchronizing production environment layers..."):
-        subprocess.check_call([sys.executable, "-m", "pip", "install", "--quiet", "langchain-google-genai>=1.0.0", "faiss-cpu>=1.8.0", "plotly>=5.20.0"])
+        subprocess.check_call([
+            sys.executable, "-m", "pip", "install", "--quiet", 
+            "langchain-google-genai>=1.0.0", "faiss-cpu>=1.8.0", "plotly>=5.20.0"
+        ])
     st.rerun()
 
 st.set_page_config(page_title="Risk & Fraud Copilot", page_icon="🛡️", layout="wide")
@@ -57,34 +61,33 @@ min_threshold = st.sidebar.slider("Cross-Border Alert Threshold (₹)", 1000000,
 
 if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
     
-    # Step 1: Signal Detection
+    # Step 1: Signal Detection (DataFrame returned directly)
     st.header("✅ Step 1: Signal Detection (Structured Data)")
     with st.spinner("Filtering analytical ledgers..."):
-        signals = engine.detect_signals(min_amount=min_threshold)
+        signals_df = engine.detect_signals(min_amount=min_threshold)
     
-    if not signals:
+    # FIXED: Handled empty state natively with .empty
+    if signals_df.empty:
         st.warning("No anomalies detected for this configuration threshold.")
     else:
-        st.success(f"Detected {len(signals)} matching high-risk account profiles.")
+        total_incidents = len(signals_df)
+        st.success(f"Detected {total_incidents} matching high-risk account profiles.")
         
-        # 📊 HIGH IMPACT JUDGE METRICS DISPLAY
-        total_flagged_amt = sum([item['AMOUNT'] for item in signals])
-        avg_risk_score = sum([item['RISK_SCORE'] for item in signals]) / len(signals)
+        # FIXED: Handled calculations using clean vectorized Pandas methods
+        total_flagged_amt = int(signals_df["AMOUNT"].sum())
+        avg_risk_score = float(signals_df["RISK_SCORE"].mean())
         
         col1, col2, col3 = st.columns(3)
-        col1.metric(label="🚨 Flagged Accounts Count", value=f"{len(signals)} Accounts")
+        col1.metric(label="🚨 Flagged Incidents Count", value=f"{total_incidents} Signals")
         col2.metric(label="💰 Total Capital Exposure", value=f"₹{total_flagged_amt:,}")
         col3.metric(label="⚠️ Average Network Risk Factor", value=f"{avg_risk_score:.1f}%")
         
         st.markdown("### Active Anomalous System Payload")
-        st.dataframe(signals, use_container_width=True)
+        st.dataframe(signals_df, use_container_width=True)
         
         # ─── 📈 PLOTLY VISUALIZATION LAYER ───
-        import pandas as pd
-        df_signals = pd.DataFrame(signals)
-        
         fig = px.bar(
-            df_signals, 
+            signals_df, 
             x="TRANSACTION_ID", 
             y="AMOUNT", 
             color="RISK_SCORE",
@@ -96,17 +99,17 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
         fig.update_layout(template="plotly_dark", title_x=0.0)
         st.plotly_chart(fig, use_container_width=True)
         
-        # Step 2: Evidence Gathering
+        # Step 2: Evidence Gathering (Passing the optimized DataFrame directly)
         st.header("🔎 Step 2: Evidence Gathering (Vector Store / RAG)")
-        with st.spinner("Querying unstructured RBI policy frameworks..."):
-            evidence = engine.gather_evidence(signals)
+        with st.spinner("Querying unstructured regulatory policy frameworks..."):
+            evidence = engine.gather_evidence(signals_df)
         st.info("Extracted Regulatory Violations & Compliance Snippets:")
         st.code(evidence, language="text")
         
         # Step 3: Audit Report Generation
         st.header("📝 Step 3: Audit-Ready Report Generation")
         with st.spinner("Compiling final markdown template via Gemini..."):
-            report_markdown = engine.generate_audit_report(signals, evidence)
+            report_markdown = engine.generate_audit_report(signals_df, evidence)
         st.markdown(report_markdown)
         
         # 💾 Document Export Download Action
