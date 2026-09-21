@@ -1,4 +1,4 @@
-# ─── BLOCK 1: INITIALIZATION & ENVIRONMENT SYNC ───
+# ─── BLOCK 1: INITIALIZATION & CACHE SAFEGUARD SYSTEM ───
 import streamlit as st
 import subprocess
 import sys
@@ -51,15 +51,30 @@ except Exception as e:
     st.error(f"❌ Initialization Error: {e}")
     st.stop()
 
+# ─── 🎛️ DYNAMIC SIDEBAR CONTROL PANEL ───
 st.sidebar.markdown("---")
 st.sidebar.header("🎛️ Control Panel")
-min_threshold = st.sidebar.slider("Cross-Border Alert Threshold (₹)", 1000000, 10000000, 5000000, step=500000)
+
+# FIXED: Callback function to automatically dump stale resources when the threshold shifts
+def handle_threshold_shift():
+    st.cache_resource.clear()
+
+# Initialize session state value if it does not exist
+if "current_threshold" not in st.session_state:
+    st.session_state["current_threshold"] = 5000000
+
+min_threshold = st.sidebar.slider(
+    "Cross-Border Alert Threshold (₹)", 
+    1000000, 10000000, 
+    key="current_threshold",
+    step=500000,
+    on_change=handle_threshold_shift
+)
 
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
 tab1, tab2, tab3 = st.tabs(["📊 Operational Dashboard", "💬 Conversational CoCo Copilot", "📁 Account Directory Lookup"])
-
 # ─── BLOCK 2: TAB 1 — OPERATIONAL PIPELINE TERMINAL ───
 with tab1:
     st.header("🛡️ Risk & Compliance Monitoring Terminal")
@@ -124,7 +139,7 @@ with tab1:
                 file_name="Suspicious_Transaction_Report.md",
                 mime="text/markdown"
             )
-# ─── BLOCK 3: TAB 2 — CONVERSATIONAL CORTEX COPILOT (COMPLETED) ───
+# ─── BLOCK 3: TAB 2 — CONVERSATIONAL CORTEX COPILOT ───
 with tab2:
     st.header("💬 Conversational Cortex Copilot Room")
     st.caption("Ask natural language compliance questions about yesterday's anomalies or regulatory requirements.")
@@ -159,10 +174,7 @@ with tab2:
             
         with st.chat_message("assistant"):
             with st.spinner("CoCo processing analytical frameworks..."):
-                # Fetch a reference baseline dataset to answer conversational prompts accurately
                 reference_df = engine.detect_signals(min_amount=min_threshold)
-                
-                # Self-healing safety layer: Force all column variations to strict uppercase strings
                 reference_df.columns = reference_df.columns.str.strip().str.upper()
                 
                 policy_context = engine.gather_evidence(reference_df)
@@ -183,11 +195,9 @@ with tab2:
                 Keep your response conversational, concise, professional, and clear. Avoid hallucinations. Quote sections directly if needed.
                 """
                 
-                # FIXED: Explicitly added TIMESTAMP and IS_PEP to prevent context blindspots
                 target_columns = ["TRANSACTION_ID", "ACCOUNT_ID", "CUSTOMER_NAME", "AMOUNT", "COUNTRY_CODE", "TIMESTAMP", "RISK_SCORE", "KYC_STATUS", "IS_PEP"]
                 existing_columns = [col for col in target_columns if col in reference_df.columns]
                 
-                # If target columns match, slice them safely; otherwise fall back to all available fields
                 if len(existing_columns) > 0:
                     data_summary = reference_df[existing_columns].to_string(index=False)
                 else:
@@ -204,7 +214,7 @@ with tab2:
                 
                 st.markdown(ai_response.content)
                 st.session_state.messages.append({"role": "assistant", "content": ai_response.content})
-# ─── BLOCK 4: TAB 3 — CUSTOMER 360 DIRECTORY LOOKUP (VERIFIED) ───
+# ─── BLOCK 4: TAB 3 — CUSTOMER 360 DIRECTORY LOOKUP ───
 with tab3:
     st.header("📁 Customer 360 Account Profile Registry")
     st.caption("Select any customer from the repository system layers to inspect their risk characteristics instantly.")
@@ -218,7 +228,6 @@ with tab3:
         matched_rows = engine.acc_df[engine.acc_df["ACCOUNT_ID"] == selected_acc]
         
         if not matched_rows.empty:
-            # Safely grab the first row item entry as a clean Python dictionary list series
             profile = matched_rows.iloc[0].to_dict()
             
             engine.tx_df.columns = engine.tx_df.columns.str.strip().str.upper()
