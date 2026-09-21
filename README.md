@@ -1,100 +1,126 @@
-# 🛡️ Risk, Fraud, and Regulatory Intelligence Copilot
+# Cortex Risk Copilot: Automated Regulatory Intelligence & Operational Remediation Engine
 
-A high-performance Python & Streamlit compliance agent engineered to trace an absolute, auditable line of custody for financial institutions. This application replaces manual compliance workflows by seamlessly bridging the gap between isolated transactional databases, interactive data analytics, and dense regulatory frameworks.
+An automated Risk, Fraud, and AML Regulatory Intelligence terminal engineered natively for secure enterprise operations within an **Azure Cloud Environment**. The system processes high-density financial transaction logs from two explicit local data ledgers against dense regulatory compliance frameworks (specifically mapping **Sections 4.1, 4.2, and 7.3 of the Master Anti-Money Laundering Directions**). 
+
+By separating structured behavioral metrics from unstructured generative policy synthesis, the platform establishes a strict, auditable Line-of-Custody (**Signal ➔ Evidence ➔ Action**) to spot complex, multi-leg velocity structuring maneuvers (layering) across a 100-row historical transaction ledger.
 
 ---
 
-## 🏛️ The 3-Step Solution Architecture
-
-The application handles data ingestion and analysis through three distinct logical layers to ensure absolute determinism and zero hallucination of mathematical metrics:
+## 🏛️ System Architecture Diagram
 
 ```text
-[User Input Threshold / Control Panel Interaction]
-                       │
-                       ▼
-1. SIGNAL DETECTION  ──► Calculates Live RBI Customer Risk Categorization (CRC) Matrix
-                       │ (Deterministic Pandas calculations on raw, unscored transaction records)
-                       ▼
-2. EVIDENCE GATHERING ──► Semantic Search across RBI Master Directions (FAISS + Gemini)
-                       │
-                       ▼
-3. AUDIT COMPLETION   ──► Generates formal Suspicious Transaction Reports (Gemini 2.5)
-```
+========================================================================================
+                      CORTEX RISK COPILOT SYSTEM ARCHITECTURE
+========================================================================================
 
-1. **Signal Detection (Structured Data & Interactive Analytics):** Evaluates live relational tables (`transaction_ledger.csv` and `account_master.csv`). It completely strips away pre-calculated score assumptions to compute a brand new **RBI-aligned Customer Risk Categorization (CRC) score** directly in memory. It immediately isolates high-risk transaction spikes, pending account transfers, and banned suspended activity, rendering high-impact KPI scorecards and an interactive **Plotly** chart.
-2. **Evidence Gathering (Unstructured RAG Data):** Uses a local vector database built with `faiss-cpu` and Google's production `gemini-embedding-001` to query and locate the exact compliance clauses broken within text-based policy documentation (`rbi_aml_directions.txt`).
-3. **Audit-Ready Report Generation (Workflow Completion):** Fuses the transaction records with raw regulatory citations into a structured, strict markdown container using `gemini-2.5-flash`, preparing an official Suspicious Transaction Report (STR) for immediate export.
-
----
-
-## 🧮 Algorithmic Customer Risk Scoring Parameters
-
-The system determines risk index values dynamically using a code-based, multi-factor additive matrix aligned with actual **Reserve Bank of India (RBI) KYC Master Directions** and **Prevention of Money Laundering Act (PMLA)** rules:
-
-*   **Jurisdiction Vector (Max 40 Pts):** Automatically flags high-risk offshore corridors (Cayman Islands `[KY]`, Switzerland `[CH]` = 40 pts) and high-velocity transit clearing points (UAE `[AE]`, Hong Kong `[HK]`, Singapore `[SG]` = 20 pts).
-*   **Onboarding Identity Profile (Max 55 Pts):** Applies heavy penalties for critical regulatory statuses (`Suspended` = 55 pts, `Pending` = 35 pts, `Verified` = 10 pts).
-*   **Capital Scale Thresholds (Max 25 Pts):** Scales based on transaction tranches relative to institutional reporting lines (≥ ₹5,000,000 = 25 pts, ≥ ₹1,000,000 = 15 pts).
-*   *The final composite index value is dynamically clamped between a logical `0` and `100` boundary.*
-
----
-
-## 🛠️ Enterprise Tech Stack
-
-*   **Frontend UI & UX:** Streamlit, Plotly (Dynamic Risk Charts)
-*   **Vector Engine & Ingestion:** FAISS (`faiss-cpu`), LangChain native data processors
-*   **Large Language Models:** Google `gemini-2.5-flash` (Reporting Engine), `gemini-embedding-001` (Embeddings)
-*   **Data Processing:** Pandas (Deterministic Financial Log Analytics & Live CRC Calculation Matrix)
-
----
-
-## 📂 Project Repository Structure
-
-```text
-risk-copilot-agent/
-│
-├── data/
-│   ├── transaction_ledger.csv      # Raw transaction database ledger (unscored)
-│   └── account_master.csv          # Standard customer account master profiles
-│
-├── policies/
-│   └── rbi_aml_directions.txt      # Unstructured RBI AML framework directions
-│
-├── app.py                          # Streamlit UX frontend dashboard wrapper with Plotly charts
-├── copilot_engine.py               # Vector database indexer & Live CRC risk-scoring engine
-└── requirements.txt                # Production dependency registry
+    [ USER INTERFACE LAYER ]
+    ┌──────────────────────────────────────────────────────────────────────────────┐
+    │                        Streamlit Application Workspace                       │
+    │  (📊 Dashboard Terminal  |  💬 CoCo Chat Room  |  🛠️ Remediation Console)    │
+    └─────────────────────────────────┬────────────────────────────────────────────┘
+                                      │ (Local Data Processing Streams)
+                                      ▼
+    [ ANALYTICAL PROCESSING LAYER ]
+    ┌──────────────────────────────────────────────────────────────────────────────┐
+    │                            Cloud Compute Engine                              │
+    │  • Deterministic Analytical Ingestion Filters                                │
+    │  • 48-Hour Rolling Window Matrix Math (Sec 7.3 Velocity Tracking via Pandas) │
+    │  • ReportLab Multi-Page PDF Generation Sub-Engine (In-Memory Stream)         │
+    └─────────────────────────────────┬────────────────────────────────────────────┘
+                                      │ (Native Internal Functions)
+                                      ▼
+    [ AI & SEMANTIC KNOWLEDGE LAYER ]
+    ┌──────────────────────────────────────────────────────────────────────────────┐
+    │                            Cortex AI Core Engine                             │
+    │  ┌────────────────────────────────────┐ ┌──────────────────────────────────┐ │
+    │  │       Semantic Search Service      │ │       Serverless LLM Service     │ │
+    │  │  (Integrated Local Vector Index)   │ │  (Azure Perimeter gpt-4o/Gemini) │ │
+    │  └────────────────────────────────────┘ └──────────────────────────────────┘ │
+    └─────────────────────────────────┬────────────────────────────────────────────┘
+                                      │ (Secure File Engine Mappings)
+                                      ▼
+    [ ENTERPRISE SECURE STORAGE LAYER ]
+    ┌──────────────────────────────────────────────────────────────────────────────┐
+    │                Local Flat-File Data Store (Exactly 2 CSVs)                   │
+    │        ┌──────────────────────────────┐ ┌──────────────────────────────┐     │
+    │        │      account_master.csv      │ │   transaction_ledger.csv     │     │
+    │        │      (Profile Vectors)       │ │      (100 Telemetries)       │     │
+    │        └──────────────────────────────┘ └──────────────────────────────┘     │
+    │  ┌────────────────────────────────────────────────────────────────────────┐ │
+    │  │                         rbi_aml_directions.txt                         │ │
+    │  │               (Sections 4.1, 4.2, 7.3 Flat-Text Rules)                 │ │
+    │  └────────────────────────────────────────────────────────────────────────┘ │
+    └==============================================================================┘
+                 [ SECURE SYSTEM BOUNDARY: HOSTED ENTIRELY ON AZURE ]
 ```
 
 ---
 
-## 🚀 Execution & Setup Instructions
+## 🌟 Key Technical Innovations
 
-### Local Deployment
-
-1. **Clone the Repository & Navigate:**
-   ```bash
-   git clone https://github.com
-   cd risk-copilot-agent
-   ```
-
-2. **Install all system package prerequisites:**
-   ```bash
-   pip install -r requirements.txt
-   ```
-
-3. **Fire up the local Streamlit application server:**
-   ```bash
-   streamlit run app.py
-   ```
-
-4. **Authentication:**
-   Input your secure **Google API Key** into the frontend sidebar mask component to unlock the system.
-
-### Cloud Deployment
-This project is fully tailored for one-click distribution on **Streamlit Community Cloud**. It features an explicit, self-healing runtime dependency injector block that synchronizes underlying libraries (including Plotly and Google GenAI) automatically upon code check-ins.
+1. **Zero-Hallucination Pipeline Geometry:** Prevents LLM mathematical inaccuracies by running data through structured pandas filters first. Rolling 48-hour window velocity matches (**Section 7.3**) and limit tracking blocks (**Section 4.2**) are computed with absolute structural calculation precision before any prompt generation occurs.
+2. **Deterministic Line-of-Custody:** Maps raw ledger anomalies back to active compliance rule text fragments in a transparent, 3-step design: **Signal Ingestion ➔ Vector Evidence Mapping ➔ In-Memory Multi-page PDF Report Generation**.
+3. **Closed-Loop Active Mitigation:** Moves beyond passive visual monitoring dashboards. The **Remediation & Actions Console** allows compliance officers to enforce tactical kill-switches (freezing outbound privileges, stepping up KYC levels), which dynamically updates account state vectors directly in memory loops.
+4. **Data Privacy Isolation:** The entire application runs inside a protected Azure cloud boundary. All data lookups, contextual search queries, and prompt reasoning arrays stay completely isolated within the secure enterprise file workspace.
 
 ---
 
-## 🔒 Governance & Auditability Guardrails
-*   **Zero Pre-Scored Reliance:** Transactions are scored entirely downstream based on mathematical profiles in Python before compiling reporting objects, preventing stale tracking parameters.
-*   **Deterministic Safety:** The engine processes all transaction sums, aggregations, and velocity rules natively in Python before passing summaries to the LLM. 
-*   **No Hallucinations:** Every line item generated in the final Suspicious Transaction Report (STR) includes direct string citations from `rbi_aml_directions.txt` and direct hash references from `transaction_ledger.csv`.
+## 📁 Repository File Layout & Datasets
+
+The application relies on a streamlined local file structure located inside the project directories to feed the operational metrics engine:
+
+### 1. `policies/rbi_aml_directions.txt`
+The central compliance knowledge text base. Sections are explicitly separated by double blank line spacings to preserve indexing boundaries:
+```text
+Section 4.1: High-Value Cross-Border Transfers & PEP Multipliers
+Any single cross-border transaction exceeding INR 5,000,000 (₹50 Lakhs) to high-risk offshore jurisdictions (including Cayman Islands [KY], Switzerland [CH]) must be flagged immediately for enhanced due diligence (EDD). If the underlying account is flagged as a Politically Exposed Person (PEP), mandatory senior management sign-off and explicit source of wealth/funds validation are required prior to final settlement, regardless of the transaction amount.
+
+Section 4.2: KYC Compliance Thresholds & Restricted Accounts
+Entities operating with a 'Pending' KYC onboarding status are strictly restricted from executing outbound international wire transfers exceeding an operational threshold of INR 1,000,000 (₹10 Lakhs). Any operational volume exceeding this cap constitutes a high-risk compliance breach. Politically Exposed Persons (PEPs) are prohibited from operating under a 'Pending' KYC state for cross-border routes; any transaction initiated by an unverified PEP profile triggers an automatic global system lock.
+
+Section 7.3: Structural Anomalies & Velocity Structuring
+Multiple high-value transfers initiated by the same corporate or individual account within a rolling 48-hour window to disparate offshore entities indicate potential velocity structuring (layering activities) and require an immediate Suspicious Transaction Report (STR) filing with FIU-IND. Systemic alerts compile cumulative transaction velocities to prevent evasion of transaction reporting limits.
+```
+
+### 2. `data/account_master.csv`
+Defines onboarding parameters and risk markers for client accounts:
+```csv
+ACCOUNT_ID,CUSTOMER_NAME,KYC_STATUS,IS_PEP,CUSTOMER_TYPE
+ACC_991,Alpha Global Holdings,Pending,FALSE,Corporate
+ACC_101,Srinivasta Enterprises,Verified,TRUE,Corporate
+ACC_202,Anita Sharma,Pending,TRUE,Individual
+ACC_303,Zeta Logistics,Suspended,FALSE,Corporate
+ACC_808,Nexus Infotech,Verified,FALSE,Corporate
+ACC_606,Sigma Ventures,Pending,FALSE,Corporate
+ACC_445,Omega Trade Corp,Verified,FALSE,Corporate
+```
+
+### 3. `data/transaction_ledger.csv`
+A high-density data register housing exactly **100 precision mock transaction items** carefully configured to trip Sections 4.1, 4.2, and 7.3 analytics.
+
+---
+
+## 🚀 Environment Quick Start & Deployment
+
+### 1. Installation of Dependencies
+Clone this repository to your target secure infrastructure node and run the package synchronization command via your terminal window:
+
+```bash
+pip install streamlit pandas plotly reportlab langchain-core langchain-community faiss-cpu
+```
+
+### 2. Execution of Dashboard App
+Ensure your `account_master.csv` and `transaction_ledger.csv` files are saved inside the `data/` folder, and your `rbi_aml_directions.txt` is inside `policies/`. Launch the dashboard terminal workspace using:
+
+```bash
+streamlit run app.py
+```
+
+---
+
+## 🎛️ Detailed Workspace Tab Breakdown
+
+* **Tab 1: 📊 Operational Dashboard:** Features live aggregate metrics (Total Exposure, Signal Counts, Network Risk Factors) alongside interactive Plotly transaction map charts. Pushing the audit button triggers the complete threat discovery flow and generates a downloadable corporate **Official PDF Compliance Report**.
+* **Tab 2: 💬 Conversational CoCo Copilot:** An interactive, conversational context workspace allowing natural language exploration. Compliance officers can query specific velocity tracking chains or ask for instant policy justifications regarding active high-risk clients.
+* **Tab 3: 📁 Account Profile Directory Lookup:** Provides a 360-degree deep dive window into individual corporate data layers, displaying current onboarding statuses, political indicator badges, and complete chronological transaction logs.
+* **Tab 4: 🛠️ Remediation & Actions Console:** The platform's strategic intervention bridge. Includes interactive drop-down menus to isolate profiles like `ACC_991`, execute immediate outbound financial overrides, toggle systemic rule sets on the fly, and download aggregated batch packages configured for regulatory reporting structures.
