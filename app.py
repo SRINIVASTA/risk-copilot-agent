@@ -124,7 +124,7 @@ with tab1:
                 file_name="Suspicious_Transaction_Report.md",
                 mime="text/markdown"
             )
-# ─── BLOCK 3: TAB 2 — CONVERSATIONAL CORTEX COPILOT (FIXED) ───
+# ─── BLOCK 3: TAB 2 — CONVERSATIONAL CORTEX COPILOT (COMPLETED) ───
 with tab2:
     st.header("💬 Conversational Cortex Copilot Room")
     st.caption("Ask natural language compliance questions about yesterday's anomalies or regulatory requirements.")
@@ -171,7 +171,7 @@ with tab2:
                 You are 'CoCo', an elite conversational AI Fraud and Compliance Copilot operating under RBI regulations.
                 Answer the user's analytical query precisely using the structural database log metrics and vector rules provided.
                 
-                ACTIVE DATA MATRIX PAYLOAD:
+                ACTIVE DATA MATRIX PAYLOAD (CONTAINS REAL TIMESTAMPS AND PEP TRACKERS):
                 {data_summary}
                 
                 REGULATORY POLICY EVIDENCE BASE:
@@ -183,15 +183,15 @@ with tab2:
                 Keep your response conversational, concise, professional, and clear. Avoid hallucinations. Quote sections directly if needed.
                 """
                 
-                # Dynamic column intersection builder to completely prevent KeyError crashes
-                target_columns = ["TRANSACTION_ID", "ACCOUNT_ID", "CUSTOMER_NAME", "AMOUNT", "COUNTRY_CODE", "RISK_SCORE", "KYC_STATUS", "IS_PEP"]
+                # FIXED: Explicitly added TIMESTAMP and IS_PEP to prevent context blindspots
+                target_columns = ["TRANSACTION_ID", "ACCOUNT_ID", "CUSTOMER_NAME", "AMOUNT", "COUNTRY_CODE", "TIMESTAMP", "RISK_SCORE", "KYC_STATUS", "IS_PEP"]
                 existing_columns = [col for col in target_columns if col in reference_df.columns]
                 
                 # If target columns match, slice them safely; otherwise fall back to all available fields
                 if len(existing_columns) > 0:
-                    data_summary = reference_df[existing_columns].to_string()
+                    data_summary = reference_df[existing_columns].to_string(index=False)
                 else:
-                    data_summary = reference_df.to_string()
+                    data_summary = reference_df.to_string(index=False)
                 
                 prompt_obj = PromptTemplate.from_template(chat_template)
                 chat_chain = prompt_obj | engine.llm
