@@ -1,4 +1,3 @@
-# Save this file as: app.py
 import streamlit as st
 import subprocess
 import sys
@@ -73,7 +72,7 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
         total_incidents = len(signals_df)
         st.success(f"Detected {total_incidents} matching high-risk account profiles.")
         
-        # Handled calculations using clean vectorized Pandas methods
+        # Vectorized calculations mapped to uppercase schema headers
         total_flagged_amt = int(signals_df["AMOUNT"].sum())
         avg_risk_score = float(signals_df["RISK_SCORE"].mean())
         
