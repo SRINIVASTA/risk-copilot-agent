@@ -66,14 +66,13 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
     with st.spinner("Filtering analytical ledgers..."):
         signals_df = engine.detect_signals(min_amount=min_threshold)
     
-    # FIXED: Handled empty state natively with .empty
     if signals_df.empty:
         st.warning("No anomalies detected for this configuration threshold.")
     else:
         total_incidents = len(signals_df)
         st.success(f"Detected {total_incidents} matching high-risk account profiles.")
         
-        # FIXED: Handled calculations using clean vectorized Pandas methods
+        # Handled calculations using clean vectorized Pandas methods
         total_flagged_amt = int(signals_df["AMOUNT"].sum())
         avg_risk_score = float(signals_df["RISK_SCORE"].mean())
         
@@ -99,7 +98,7 @@ if st.sidebar.button("Run Compliance Audit Pipeline", type="primary"):
         fig.update_layout(template="plotly_dark", title_x=0.0)
         st.plotly_chart(fig, use_container_width=True)
         
-        # Step 2: Evidence Gathering (Passing the optimized DataFrame directly)
+        # Step 2: Evidence Gathering
         st.header("🔎 Step 2: Evidence Gathering (Vector Store / RAG)")
         with st.spinner("Querying unstructured regulatory policy frameworks..."):
             evidence = engine.gather_evidence(signals_df)
