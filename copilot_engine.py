@@ -109,10 +109,11 @@ class FraudCopilotEngine:
         return "\n\n".join(evidence_pool)
 
     def generate_audit_report(self, flagged_df, evidence):
-        """Step 3: Compile final, regulatory-compliant STR document matching data to legal rules"""
+        """Step 3: Compile final report with Rate-Limit protection using Python pre-aggregation"""
         if flagged_df.empty:
             return "### Compliance Verified\nAll entries comply completely with PMLA tracking layers."
 
+        # Fixed: Generate the complete large table inside local Python memory first
         table_rows = []
         for _, row in flagged_df.iterrows():
             formatted_amt = f"₹{row['AMOUNT']:,}"
@@ -123,32 +124,43 @@ class FraudCopilotEngine:
             )
         markdown_ledger = "\n".join(table_rows)
 
+        # Pre-calculate short analytical profiles for the prompt context window to bypass rate errors
+        total_incidents = len(flagged_df)
+        total_exposure = int(flagged_df["AMOUNT"].sum())
+        avg_risk_factor = float(flagged_df["RISK_SCORE"].mean())
+        pep_count = int(flagged_df["IS_PEP"].sum())
+
+        signal_summary = (
+            f"Total Incidents Flagged: {total_incidents}, "
+            f"Total Capital at Risk: INR {total_exposure:,}, "
+            f"Average Risk Index: {avg_risk_factor:.1f}%, "
+            f"Politically Exposed Persons Involved: {pep_count}"
+        )
+
         template = """
         You are an expert Chief Compliance and AML Reporting Officer operating under RBI guidelines.
-        Generate an official Suspicious Transaction Report (STR) adhering strictly to FIU-IND submission conventions.
+        Generate the executive analysis portion of an official Suspicious Transaction Report (STR).
         
-        DATA SIGNALS LEDGER:
-
-        | Transaction ID | Account ID | Customer Name | Amount (INR) | Destination | Risk Score | KYC Status | PEP Flag |
-        | :--- | :--- | :--- | :--- | :--- | :--- | :--- | :--- |
-        {markdown_ledger}
+        AGGREGATED METRICS:
+        {signal_summary}
         
         REGULATORY EVIDENCE BASE:
         {evidence}
         
-        Use the following strict Markdown layout down to the exact header structure:
+        Provide the response following this strict outline down to the headers. 
+        Do not output a table block, as the system will merge it post-execution.
         
         # SUSPICIOUS TRANSACTION REPORT (STR)
         
         ## 📌 1. EXECUTIVE SUMMARY
-        Provide a legal executive summary here explaining the overall risk profile, total capital exposure, and systemic internal control vulnerabilities found under PMLA and RBI directives. Explicitly mention if any Politically Exposed Persons (PEPs) triggered alerts.
+        Provide a legal executive summary here explaining the overall risk profile, total capital exposure, and systemic internal control vulnerabilities found under PMLA and RBI directives. Mention the numbers provided in the metrics.
         
         ## 📊 2. FLAGGED TRANSACTION LEDGER
-        [Inject the rendered Markdown ledger here exactly as provided]
+        [LEDGER_INSERT_MARKER]
         
         ## 🔎 3. REGULATORY COMPLIANCE BREACH ANALYSIS
         * **Specific Section Broken:** [Identify explicit sections from evidence, e.g., RBI Section 4.1 or 4.2]
-        * **Evidence:** [Quote the policy text snippet that proves a breach occurred based on the data ledger parameters]
+        * **Evidence:** [Quote the direct text snippet from the regulatory evidence base that confirms the breach]
         
         ## 💡 4. RECOMMENDED COMPLIANCE ACTIONS
         - [ ] Action 1
@@ -162,8 +174,12 @@ class FraudCopilotEngine:
         prompt = PromptTemplate.from_template(template)
         chain = prompt | self.llm
         
+        # Invoke the LLM with the highly compressed summary context variables
         response = chain.invoke({
-            "markdown_ledger": markdown_ledger, 
+            "signal_summary": signal_summary, 
             "evidence": evidence
         })
-        return response.content
+        
+        # Self-Healing Layer: Inject the full, massive table safely inside Python memory
+        final_output = response.content.replace("[LEDGER_INSERT_MARKER]", markdown_ledger)
+        return final_output
