@@ -193,7 +193,7 @@ with tab2:
                 
                 st.markdown(ai_response.content)
                 st.session_state.messages.append({"role": "assistant", "content": ai_response.content})
-# ─── BLOCK 4: TAB 3 — CUSTOMER 360 DIRECTORY LOOKUP ───
+# ─── BLOCK 4: TAB 3 — CUSTOMER 360 DIRECTORY LOOKUP (FIXED) ───
 with tab3:
     st.header("📁 Customer 360 Account Profile Registry")
     st.caption("Select any customer from the repository system layers to inspect their risk characteristics instantly.")
@@ -204,23 +204,32 @@ with tab3:
     selected_acc = st.selectbox("Select Target Account ID to Screen:", account_list)
     
     if selected_acc:
-        profile = engine.acc_df[engine.acc_df["ACCOUNT_ID"] == selected_acc].iloc[0]
+        # Filter for the matching account dataframe row slice
+        matched_rows = engine.acc_df[engine.acc_df["ACCOUNT_ID"] == selected_acc]
         
-        engine.tx_df.columns = engine.tx_df.columns.str.strip().str.upper()
-        related_tx = engine.tx_df[engine.tx_df["ACCOUNT_ID"] == selected_acc]
-        
-        c1, c2, c3, c4 = st.columns(4)
-        c1.markdown(f"**Customer Name:**\n\n{profile['CUSTOMER_NAME']}")
-        
-        status_color = "🔴" if profile['KYC_STATUS'] == "Suspended" else "🟡" if profile['KYC_STATUS'] == "Pending" else "🟢"
-        c2.markdown(f"**KYC Onboarding Status:**\n\n{status_color} {profile['KYC_STATUS']}")
-        
-        pep_badge = "🚨 POLITICALLY EXPOSED PERSON (HIGH RISK)" if str(profile['IS_PEP']).strip().lower() == "true" else "🟢 Standard Client Profile"
-        c3.markdown(f"**Political Profile Matrix:**\n\n{pep_badge}")
-        c4.markdown(f"**Entity Classification:**\n\n{profile['CUSTOMER_TYPE']}")
-        
-        st.markdown("#### Historical Transaction Ledger Matrix for this Profile")
-        if related_tx.empty:
-            st.info("No transaction telemetry logs found on file for this specific profile line.")
+        if not matched_rows.empty:
+            # Convert row slice natively to a clean Python dictionary to eliminate KeyError
+            profile = matched_rows.to_dict(orient='records')[0]
+            
+            engine.tx_df.columns = engine.tx_df.columns.str.strip().str.upper()
+            related_tx = engine.tx_df[engine.tx_df["ACCOUNT_ID"] == selected_acc]
+            
+            c1, c2, c3, c4 = st.columns(4)
+            c1.markdown(f"**Customer Name:**\n\n{profile.get('CUSTOMER_NAME', 'N/A')}")
+            
+            status = str(profile.get('KYC_STATUS', '')).strip()
+            status_color = "🔴" if status == "Suspended" else "🟡" if status == "Pending" else "🟢"
+            c2.markdown(f"**KYC Onboarding Status:**\n\n{status_color} {status}")
+            
+            is_pep_val = str(profile.get('IS_PEP', '')).strip().lower() == 'true'
+            pep_badge = "🚨 POLITICALLY EXPOSED PERSON (HIGH RISK)" if is_pep_val else "🟢 Standard Client Profile"
+            c3.markdown(f"**Political Profile Matrix:**\n\n{pep_badge}")
+            c4.markdown(f"**Entity Classification:**\n\n{profile.get('CUSTOMER_TYPE', 'N/A')}")
+            
+            st.markdown("#### Historical Transaction Ledger Matrix for this Profile")
+            if related_tx.empty:
+                st.info("No transaction telemetry logs found on file for this specific profile line.")
+            else:
+                st.dataframe(related_tx, use_container_width=True)
         else:
-            st.dataframe(related_tx, use_container_width=True)
+            st.error("❌ The selected Account ID profile could not be found within active datasets.")
