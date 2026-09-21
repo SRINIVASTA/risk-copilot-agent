@@ -1,4 +1,3 @@
-# Save this file as: copilot_engine.py
 import pandas as pd
 from langchain_community.vectorstores import FAISS
 from langchain_core.prompts import PromptTemplate
@@ -10,9 +9,9 @@ class FraudCopilotEngine:
         self.tx_df = pd.read_csv("data/transaction_ledger.csv")
         self.acc_df = pd.read_csv("data/account_master.csv")
         
-        # Clean header column fields
-        self.tx_df.columns = self.tx_df.columns.str.strip()
-        self.acc_df.columns = self.acc_df.columns.str.strip()
+        # Self-healing clean step: force headers to uniform stripped uppercase
+        self.tx_df.columns = self.tx_df.columns.str.strip().str.upper()
+        self.acc_df.columns = self.acc_df.columns.str.strip().str.upper()
         
         # Drop pre-existing risk columns to compute fresh from the RBI framework
         if "RISK_SCORE" in self.tx_df.columns:
@@ -30,56 +29,51 @@ class FraudCopilotEngine:
         self.llm = ChatGoogleGenerativeAI(model="models/gemini-2.5-flash", temperature=0)
 
     def _calculate_live_risk_score(self, df):
-        """
-        Calculates risk matrices adhering strictly to RBI-mandated 
-        Customer Risk Categorization (CRC) profiles, now with PEP monitoring.
-        """
+        """Calculates risk matrices adhering strictly to RBI-mandated CRC profiles."""
         scores = []
         for _, row in df.iterrows():
             score = 0
             
             # Dimension 1: FATF & Offshore Jurisdiction Profile
-            if row["COUNTRY_CODE"] in ["KY", "CH"]:  # Cayman Islands / Switzerland Tax Havens
+            if row["COUNTRY_CODE"] in ["KY", "CH"]:
                 score += 40
-            elif row["COUNTRY_CODE"] in ["AE", "HK", "SG"]:  # High-volume clearing hubs
+            elif row["COUNTRY_CODE"] in ["AE", "HK", "SG"]:
                 score += 20
             else:
                 score += 5
                 
-            # Dimension 2: RBI Customer Acceptance and KYC Status Onboarding Matrix
+            # Dimension 2: RBI Onboarding Matrix
             if row["KYC_STATUS"] == "Suspended":
-                score += 55  # Critical Violation
+                score += 55
             elif row["KYC_STATUS"] == "Pending":
-                score += 35  # Restricted Account
+                score += 35
             else:
-                score += 10  # Standard Verified Base
+                score += 10
                 
-            # Dimension 3: Capital Exposure Banding (RBI High-Value Reporting Caps)
+            # Dimension 3: Capital Exposure Banding
             if row["AMOUNT"] >= 5000000:
-                score += 25  # ₹50 Lakh Threshold Breached
+                score += 25
             elif row["AMOUNT"] >= 1000000:
-                score += 15  # ₹10 Lakh Threshold Breached
+                score += 15
             else:
                 score += 5
 
             # Dimension 4: Politically Exposed Person (PEP) Flag Check
             if str(row["IS_PEP"]).strip().lower() == "true":
-                score += 30  # High-impact political exposure multiplier
+                score += 30
                 
-            # Lock parameters inside normal 0-100 system limits
             scores.append(min(score, 100))
-            
         return scores
 
     def detect_signals(self, min_amount=5000000):
         """Step 1: Signal Detection aligned with RBI Anti-Money Laundering Thresholds"""
-        # Execute table joins
+        # Join execution across uppercase headers
         merged = pd.merge(self.tx_df, self.acc_df, on="ACCOUNT_ID")
         
         # Feed live calculated metrics back into DataFrame
         merged["RISK_SCORE"] = self._calculate_live_risk_score(merged)
         
-        # Trigger hard alarms based on official compliance filters (including PEP overrides)
+        # Trigger hard alarms based on official compliance filters
         condition = (
             (merged["AMOUNT"] >= min_amount) | 
             (merged["RISK_SCORE"] >= 70) | 
