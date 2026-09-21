@@ -124,7 +124,7 @@ with tab1:
                 file_name="Suspicious_Transaction_Report.md",
                 mime="text/markdown"
             )
-# ─── BLOCK 3: TAB 2 — CONVERSATIONAL CORTEX COPILOT ───
+# ─── BLOCK 3: TAB 2 — CONVERSATIONAL CORTEX COPILOT (FIXED) ───
 with tab2:
     st.header("💬 Conversational Cortex Copilot Room")
     st.caption("Ask natural language compliance questions about yesterday's anomalies or regulatory requirements.")
@@ -159,7 +159,10 @@ with tab2:
             
         with st.chat_message("assistant"):
             with st.spinner("CoCo processing analytical frameworks..."):
+                # Fetch a reference baseline dataset to answer conversational prompts accurately
                 reference_df = engine.detect_signals(min_amount=min_threshold)
+                
+                # Self-healing safety layer: Force all column variations to strict uppercase strings
                 reference_df.columns = reference_df.columns.str.strip().str.upper()
                 
                 policy_context = engine.gather_evidence(reference_df)
@@ -180,7 +183,15 @@ with tab2:
                 Keep your response conversational, concise, professional, and clear. Avoid hallucinations. Quote sections directly if needed.
                 """
                 
-                data_summary = reference_df[["TRANSACTION_ID", "ACCOUNT_ID", "CUSTOMER_NAME", "AMOUNT", "COUNTRY_CODE", "RISK_SCORE", "KYC_STATUS", "IS_PEP"]].to_string()
+                # Dynamic column intersection builder to completely prevent KeyError crashes
+                target_columns = ["TRANSACTION_ID", "ACCOUNT_ID", "CUSTOMER_NAME", "AMOUNT", "COUNTRY_CODE", "RISK_SCORE", "KYC_STATUS", "IS_PEP"]
+                existing_columns = [col for col in target_columns if col in reference_df.columns]
+                
+                # If target columns match, slice them safely; otherwise fall back to all available fields
+                if len(existing_columns) > 0:
+                    data_summary = reference_df[existing_columns].to_string()
+                else:
+                    data_summary = reference_df.to_string()
                 
                 prompt_obj = PromptTemplate.from_template(chat_template)
                 chat_chain = prompt_obj | engine.llm
@@ -193,7 +204,7 @@ with tab2:
                 
                 st.markdown(ai_response.content)
                 st.session_state.messages.append({"role": "assistant", "content": ai_response.content})
-# ─── BLOCK 4: TAB 3 — CUSTOMER 360 DIRECTORY LOOKUP (FIXED) ───
+# ─── BLOCK 4: TAB 3 — CUSTOMER 360 DIRECTORY LOOKUP (VERIFIED) ───
 with tab3:
     st.header("📁 Customer 360 Account Profile Registry")
     st.caption("Select any customer from the repository system layers to inspect their risk characteristics instantly.")
@@ -204,12 +215,11 @@ with tab3:
     selected_acc = st.selectbox("Select Target Account ID to Screen:", account_list)
     
     if selected_acc:
-        # Filter for the matching account dataframe row slice
         matched_rows = engine.acc_df[engine.acc_df["ACCOUNT_ID"] == selected_acc]
         
         if not matched_rows.empty:
-            # Convert row slice natively to a clean Python dictionary to eliminate KeyError
-            profile = matched_rows.to_dict(orient='records')[0]
+            # Safely grab the first row item entry as a clean Python dictionary list series
+            profile = matched_rows.iloc[0].to_dict()
             
             engine.tx_df.columns = engine.tx_df.columns.str.strip().str.upper()
             related_tx = engine.tx_df[engine.tx_df["ACCOUNT_ID"] == selected_acc]
